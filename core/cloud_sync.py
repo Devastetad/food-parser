@@ -107,8 +107,7 @@ class CloudSync:
         """Подгружает сохранённое. False: файла ещё нет, это первый запуск."""
         self._sha = self._read_sha()
         if self._sha is None:
-            self._saved_hash = _hash(snapshot(conn))
-            return False
+            return False  # хэша нет, поэтому уже внесённые данные уйдут при первом сохранении
         response = self._request("GET", headers={"Accept": "application/vnd.github.raw+json"})
         if response.status_code != 200:
             raise SyncError(f"GitHub ответил {response.status_code}")

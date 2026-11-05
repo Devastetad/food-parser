@@ -121,9 +121,17 @@ def test_first_start_without_file_is_not_an_error(db, github):
 
 def test_no_write_when_nothing_changed(db, github):
     sync = make_sync(github)
-    sync.load(db)
+    sync.save_if_changed(db)
     assert sync.save_if_changed(db) is False
-    assert github.writes == 0
+    assert github.writes == 1
+
+
+def test_data_entered_before_key_is_uploaded_at_first_save(db, github):
+    add_item(db, "Рис", 1, "кг")
+    sync = make_sync(github)
+    sync.load(db)
+    assert sync.save_if_changed(db) is True
+    assert "Рис" in github.content.decode("utf-8")
 
 
 def test_change_is_written_once(db, github):
