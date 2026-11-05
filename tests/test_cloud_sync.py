@@ -327,3 +327,35 @@ def test_settings_says_autosave_is_on(cloud_app):
     app = run_app()
     app.switch_page("interface/pages/settings.py").run()
     assert any("автоматически сохраняются" in item.value for item in app.caption)
+
+
+def test_key_added_after_start_is_picked_up(tmp_path, monkeypatch, github):
+    import streamlit as st
+
+    import config
+    from core import cloud_sync
+
+    monkeypatch.setattr(config, "DB_PATH", tmp_path / "app.db")
+    monkeypatch.setattr(config, "BACKUP_DIR", tmp_path / "backups")
+
+    class ConnectedSync(cloud_sync.CloudSync):
+        def __init__(self, token, repository):
+            super().__init__(token, repository, github)
+
+    monkeypatch.setattr(cloud_sync, "CloudSync", ConnectedSync)
+    secrets = {}
+    monkeypatch.setattr("interface.components.shared.read_secret", lambda name: secrets.get(name))
+    st.cache_resource.clear()
+
+    app = run_app()
+    assert not app.exception
+    with closing(connect(config.DB_PATH)) as conn:
+        add_item(conn, "Рис", 1, "кг")
+    app.run()
+    assert github.content is None
+
+    secrets.update({"GITHUB_TOKEN": "token", "DATA_REPO": "me/data"})
+    app.run()
+
+    assert not app.exception
+    assert app.session_state["cloud_sync_enabled"] is True

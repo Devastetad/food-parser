@@ -15,16 +15,17 @@ st.set_page_config(
 
 
 @st.cache_resource
-def prepare_database() -> CloudSync | None:
+def prepare_database() -> None:
     """Один раз на запуск сервера: Streamlit перевыполняет скрипт при каждом действии."""
     if config.SEED_DB.exists() and not config.DB_PATH.exists():
         config.DB_PATH.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(config.SEED_DB, config.DB_PATH)
     init_db(config.DB_PATH, config.BACKUP_DIR)
 
-    token, repository = read_secret("GITHUB_TOKEN"), read_secret("DATA_REPO")
-    if not (token and repository):
-        return None
+
+@st.cache_resource
+def connect_cloud(token: str, repository: str) -> CloudSync:
+    """Кэш привязан к ключу: добавленный позже ключ подхватится без перезапуска."""
     sync = CloudSync(token, repository)
     with open_db() as conn:
         sync.load(conn)
@@ -32,7 +33,9 @@ def prepare_database() -> CloudSync | None:
 
 
 try:
-    sync = prepare_database()
+    prepare_database()
+    token, repository = read_secret("GITHUB_TOKEN"), read_secret("DATA_REPO")
+    sync = connect_cloud(token, repository) if token and repository else None
 except SyncError as error:
     # Работать дальше нельзя: новые записи затёрли бы сохранённые данные на GitHub
     st.error(f"Сохранённые данные не загрузились. {error}")

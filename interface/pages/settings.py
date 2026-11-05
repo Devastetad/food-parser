@@ -171,6 +171,8 @@ def file_section() -> None:
 def database_section() -> None:
     if st.session_state.get(SYNC_KEY):
         st.caption("Данные автоматически сохраняются на GitHub.")
+    else:
+        st.caption("Автосохранение на GitHub выключено: данные хранятся только в этой базе.")
     with st.expander("Состояние базы"):
         st.write(f"Файл: `{config.DB_PATH}`")
         st.write(f"Версия схемы: {schema_version(config.DB_PATH)}")
