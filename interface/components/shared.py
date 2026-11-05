@@ -1,13 +1,29 @@
 """Общие части страниц: доступ к базе, форматирование, сообщения после перезапуска."""
+import re
 from contextlib import closing
 from datetime import date
 
 import streamlit as st
+from streamlit.errors import StreamlitSecretNotFoundError
 
 import config
 from database.database import connect
 
 FLASH_KEY = "flash_message"
+SYNC_KEY = "cloud_sync_enabled"
+PHONE_RE = re.compile(r"iPhone|iPod|Android.*Mobile", re.I)
+
+
+def read_secret(name: str) -> str | None:
+    """Значение из секретов Streamlit. На компьютере их нет, и это нормально."""
+    try:
+        return st.secrets.get(name)
+    except StreamlitSecretNotFoundError:
+        return None
+
+
+def is_phone() -> bool:
+    return bool(PHONE_RE.search(st.context.headers.get("User-Agent", "")))
 
 
 def open_db():

@@ -1,11 +1,13 @@
-"""Точка входа Streamlit. Разделы появляются в меню по мере готовности этапов."""
+"""Точка входа Streamlit."""
 import shutil
 import sqlite3
 
 import streamlit as st
 
 import config
+from core.cloud_sync import CloudSync, SyncError
 from database.database import BackupError, SchemaTooNewError, init_db
+from interface.components.shared import SYNC_KEY, open_db, read_secret
 
 st.set_page_config(
     page_title="Personal Food Parser", page_icon=":material/skillet:", layout="wide"
@@ -13,19 +15,36 @@ st.set_page_config(
 
 
 @st.cache_resource
-def prepare_database() -> None:
+def prepare_database() -> CloudSync | None:
     """Один раз на запуск сервера: Streamlit перевыполняет скрипт при каждом действии."""
     if config.SEED_DB.exists() and not config.DB_PATH.exists():
         config.DB_PATH.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(config.SEED_DB, config.DB_PATH)
     init_db(config.DB_PATH, config.BACKUP_DIR)
 
+    token, repository = read_secret("GITHUB_TOKEN"), read_secret("DATA_REPO")
+    if not (token and repository):
+        return None
+    sync = CloudSync(token, repository)
+    with open_db() as conn:
+        sync.load(conn)
+    return sync
+
 
 try:
-    prepare_database()
+    sync = prepare_database()
+except SyncError as error:
+    # Работать дальше нельзя: новые записи затёрли бы сохранённые данные на GitHub
+    st.error(f"Сохранённые данные не загрузились. {error}")
+    if st.button("Попробовать снова"):
+        st.cache_resource.clear()
+        st.rerun()
+    st.stop()
 except (sqlite3.Error, OSError, BackupError, SchemaTooNewError) as error:
     st.error(f"Не удалось открыть базу данных: {error}")
     st.stop()
+
+st.session_state[SYNC_KEY] = sync is not None
 
 page = st.navigation(
     [
@@ -40,3 +59,11 @@ page = st.navigation(
     ]
 )
 page.run()
+
+# st.rerun прерывает скрипт раньше этой строки, но следующий проход доходит сюда и сохраняет
+if sync is not None:
+    try:
+        with open_db() as conn:
+            sync.save_if_changed(conn)
+    except SyncError as error:
+        st.warning(f"Изменения пока не сохранены на GitHub. {error}. Попробую при следующем действии.")

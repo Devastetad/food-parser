@@ -29,6 +29,7 @@ from interface.components.shared import (
     expiry_label,
     flash,
     format_quantity,
+    is_phone,
     open_db,
     show_flash,
 )
@@ -182,6 +183,55 @@ def stock_table(items) -> None:
                 st.rerun()
 
 
+def stock_cards(items) -> None:
+    """Вид для телефона: широкая таблица там неудобна, каждый продукт — своя карточка."""
+    if not items:
+        st.write("Дома пока пусто. Добавьте первый продукт в форме выше.")
+        return
+    search = st.text_input(
+        "Поиск", placeholder="Найти продукт", label_visibility="collapsed", icon=":material/search:"
+    )
+    for item in items:
+        if search and search.casefold() not in item.name.casefold():
+            continue
+        title = f"{item.name} · {format_quantity(item.quantity)} {item.unit}"
+        with st.expander(title):
+            label = expiry_label(item.expires_on)
+            if label:
+                st.caption(label)
+            quantity = st.number_input(
+                "Количество", min_value=0.0, value=float(item.quantity), key=f"quantity_{item.id}"
+            )
+            unit = st.selectbox(
+                "Единица",
+                INVENTORY_UNITS,
+                index=INVENTORY_UNITS.index(item.unit),
+                key=f"unit_{item.id}",
+            )
+            expires_on = st.date_input(
+                "Годен до", value=item.expires_on, format="DD.MM.YYYY", key=f"expiry_{item.id}"
+            )
+            if st.button("Сохранить", key=f"save_{item.id}", type="primary", width="stretch"):
+                try:
+                    with open_db() as conn:
+                        update_item(conn, item.id, quantity, unit, expires_on)
+                except (InventoryError, sqlite3.Error) as error:
+                    st.error(str(error))
+                else:
+                    flash(f"Сохранено: {item.name}")
+                    st.rerun()
+            if st.button("Закончился", key=f"finish_{item.id}", width="stretch"):
+                with open_db() as conn:
+                    mark_finished(conn, item.id)
+                flash(f"{item.name} закончился")
+                st.rerun()
+            if st.button("Удалить", key=f"remove_{item.id}", width="stretch"):
+                with open_db() as conn:
+                    delete_item(conn, item.id)
+                flash(f"Удалено: {item.name}")
+                st.rerun()
+
+
 def finished_list(items) -> None:
     if not items:
         st.caption("Здесь появятся продукты, которые закончились. Их можно вернуть одной кнопкой.")
@@ -230,7 +280,11 @@ def unmatched_section(items) -> None:
             st.rerun()
 
 
-add_form()
+if is_phone():
+    with st.expander("Добавить продукт", icon=":material/add:"):
+        add_form()
+else:
+    add_form()
 with open_db() as conn:
     stock = list_items(conn)
     finished = list_finished(conn)
@@ -238,7 +292,10 @@ with open_db() as conn:
 
 home_tab, finished_tab = st.tabs([f"Дома · {len(stock)}", f"Закончились · {len(finished)}"])
 with home_tab:
-    stock_table(stock)
+    if is_phone():
+        stock_cards(stock)
+    else:
+        stock_table(stock)
     unmatched_section(unmatched)
 with finished_tab:
     finished_list(finished)

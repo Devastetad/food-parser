@@ -22,7 +22,7 @@ from database.database import (
     schema_version,
     table_counts,
 )
-from interface.components.shared import flash, open_db, plural, show_flash
+from interface.components.shared import SYNC_KEY, flash, open_db, plural, show_flash
 
 show_flash()
 st.title("Настройки")
@@ -169,6 +169,8 @@ def file_section() -> None:
 
 
 def database_section() -> None:
+    if st.session_state.get(SYNC_KEY):
+        st.caption("Данные автоматически сохраняются на GitHub.")
     with st.expander("Состояние базы"):
         st.write(f"Файл: `{config.DB_PATH}`")
         st.write(f"Версия схемы: {schema_version(config.DB_PATH)}")

@@ -249,3 +249,26 @@ def test_existing_data_is_not_replaced_by_seed(tmp_path, monkeypatch):
     AppTest.from_file(APP, default_timeout=30).run()
 
     assert [item.name for item in with_db(db_path, list_items)] == ["Моё"]
+
+
+def test_phone_gets_cards_instead_of_table(app_db, monkeypatch):
+    from core.inventory_manager import list_finished
+
+    monkeypatch.setattr("interface.components.shared.is_phone", lambda: True)
+    item_id = with_db(app_db, lambda conn: add_item(conn, "Рис", 1, "кг"))
+
+    app = run("inventory.py")
+    assert any(item.label == "Закончился" for item in app.button)
+
+    app.number_input[1].set_value(2.5)
+    next(item for item in app.button if item.label == "Сохранить").click().run()
+    assert not app.exception
+    assert [item.quantity for item in with_db(app_db, list_items)] == [2.5]
+
+    next(item for item in app.button if item.label == "Закончился").click().run()
+    assert [item.id for item in with_db(app_db, list_finished)] == [item_id]
+
+
+def test_computer_keeps_table(app_db):
+    with_db(app_db, lambda conn: add_item(conn, "Рис", 1, "кг"))
+    assert not any(item.label == "Закончился" for item in run("inventory.py").button)
