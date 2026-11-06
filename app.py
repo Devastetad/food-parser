@@ -1,4 +1,5 @@
 """Точка входа Streamlit."""
+import hashlib
 import shutil
 import sqlite3
 
@@ -15,18 +16,32 @@ st.set_page_config(
 )
 
 
+def seed_version() -> str:
+    if not config.SEED_DB.exists():
+        return ""
+    return hashlib.sha256(config.SEED_DB.read_bytes()).hexdigest()
+
+
 @st.cache_resource
-def prepare_database(schema_version: int) -> None:
-    """Один раз на запуск сервера и версию схемы: новая миграция применится без перезапуска."""
-    if config.SEED_DB.exists() and not config.DB_PATH.exists():
+def prepare_database(schema_version: int, seed: str, cloud: bool) -> None:
+    """Один раз на запуск сервера, версию схемы и версию рецептов.
+
+    Новая база рецептов заменяет старую только при автосохранении: записи пользователя
+    лежат на GitHub и вернутся сразу после замены. Без него база не трогается.
+    """
+    marker = config.DB_PATH.with_name(config.DB_PATH.name + ".seed")
+    seen = marker.read_text(encoding="utf-8") if marker.exists() else None
+    if seed and (not config.DB_PATH.exists() or (cloud and seen != seed)):
         config.DB_PATH.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(config.SEED_DB, config.DB_PATH)
+    if seed:
+        marker.write_text(seed, encoding="utf-8")
     init_db(config.DB_PATH, config.BACKUP_DIR)
 
 
 @st.cache_resource
-def connect_cloud(token: str, repository: str) -> CloudSync:
-    """Кэш привязан к ключу: добавленный позже ключ подхватится без перезапуска."""
+def connect_cloud(token: str, repository: str, seed: str) -> CloudSync:
+    """Кэш привязан к ключу и рецептам: после обновления базы данные подгрузятся заново."""
     sync = CloudSync(token, repository)
     with open_db() as conn:
         sync.load(conn)
@@ -34,9 +49,11 @@ def connect_cloud(token: str, repository: str) -> CloudSync:
 
 
 try:
-    prepare_database(len(MIGRATIONS))
     token, repository = read_secret("GITHUB_TOKEN"), read_secret("DATA_REPO")
-    sync = connect_cloud(token, repository) if token and repository else None
+    has_cloud = bool(token and repository)
+    seed = seed_version()
+    prepare_database(len(MIGRATIONS), seed, has_cloud)
+    sync = connect_cloud(token, repository, seed) if has_cloud else None
 except SyncError as error:
     # Работать дальше нельзя: новые записи затёрли бы сохранённые данные на GitHub
     st.error(f"Сохранённые данные не загрузились. {error}")

@@ -367,3 +367,61 @@ def test_key_added_after_start_is_picked_up(tmp_path, monkeypatch, github):
 
     assert not app.exception
     assert app.session_state["cloud_sync_enabled"] is True
+
+
+def test_new_recipe_base_keeps_user_data(cloud_app, github, tmp_path, monkeypatch):
+    import streamlit as st
+
+    import config
+
+    def make_seed(path, titles):
+        init_db(path, tmp_path / "seed_backups")
+        with closing(connect(path)) as conn:
+            for title in titles:
+                conn.execute("INSERT INTO recipes (title) VALUES (?)", (title,))
+
+    seed = tmp_path / "seed.db"
+    make_seed(seed, ["Старый рецепт"])
+    monkeypatch.setattr(config, "SEED_DB", seed)
+    app = run_app()
+    with closing(connect(cloud_app)) as conn:
+        add_item(conn, "Рис", 1, "кг")
+    app.run()
+    assert "Рис" in github.content.decode("utf-8")
+
+    seed.unlink()
+    make_seed(seed, ["Старый рецепт", "Новый рецепт"])
+    app = run_app()
+
+    assert not app.exception
+    assert app.metric[0].value == "2"
+    assert app.metric[1].value == "1"
+
+
+def test_without_autosave_new_seed_does_not_touch_database(tmp_path, monkeypatch):
+    import streamlit as st
+
+    import config
+
+    db_path, seed = tmp_path / "app.db", tmp_path / "seed.db"
+    init_db(seed, tmp_path / "seed_backups")
+    monkeypatch.setattr(config, "SEED_DB", seed)
+    monkeypatch.setattr(config, "DB_PATH", db_path)
+    monkeypatch.setattr(config, "BACKUP_DIR", tmp_path / "backups")
+    monkeypatch.setattr("interface.components.shared.read_secret", lambda name: None)
+    st.cache_resource.clear()
+    run_app()
+    with closing(connect(db_path)) as conn:
+        add_item(conn, "Рис", 1, "кг")
+
+    with closing(connect(seed)) as conn:
+        conn.execute("INSERT INTO recipes (title) VALUES ('Новый')")
+    st.cache_resource.clear()
+    run_app()
+
+    assert [item.name for item in with_db_items(db_path)] == ["Рис"]
+
+
+def with_db_items(path):
+    with closing(connect(path)) as conn:
+        return list_items(conn)

@@ -13,6 +13,10 @@ from parser.duplicate_checker import DuplicateIndex
 
 
 UNTIMED_STEP_MINUTES = 5
+SOURCE_NAMES = {
+    "wikibooks_ru": "Викиучебник",
+    "wikibooks_en": "Викиучебник на английском, машинный перевод",
+}
 
 
 @dataclass
@@ -35,16 +39,19 @@ def import_raw_recipes(db_path: Path = config.DB_PATH) -> ImportStats:
         equipment_ids = {
             row["name"]: row["id"] for row in conn.execute("SELECT id, name FROM kitchen_equipment")
         }
-        rows = conn.execute("SELECT license, payload FROM raw_recipes ORDER BY id").fetchall()
+        rows = conn.execute(
+            "SELECT r.license, r.payload, i.source FROM raw_recipes r "
+            "JOIN raw_items i ON i.id = r.raw_item_id ORDER BY r.id"
+        ).fetchall()
         for row in rows:
             _import_one(conn, json.loads(row["payload"]), row["license"], matcher, duplicates,
-                        equipment_ids, stats)  # fmt: skip
+                        equipment_ids, stats, SOURCE_NAMES.get(row["source"], row["source"]))  # fmt: skip
         matcher.finish()
         matcher.remove_unused()
     return stats
 
 
-def _import_one(conn, raw, license_name, matcher, duplicates, equipment_ids, stats) -> None:
+def _import_one(conn, raw, license_name, matcher, duplicates, equipment_ids, stats, source) -> None:
     ingredients = []
     for line in raw["ingredients"]:
         for parsed in normalizer.parse_ingredient(line["text"]):
@@ -93,7 +100,7 @@ def _import_one(conn, raw, license_name, matcher, duplicates, equipment_ids, sta
             normalizer.parse_servings(raw["servings_text"], notes),
             normalizer.parse_difficulty(raw["difficulty_text"]),
             raw["image_url"],
-            "Викиучебник",
+            source,
             raw["source_url"],
             license_name,
             normalizer.parse_calories(raw["calories_text"]),

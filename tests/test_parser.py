@@ -775,3 +775,103 @@ def test_corrupt_dump_fails_run_instead_of_finishing_silently(wikibooks, db_path
     with pytest.raises((EOFError, OSError)):
         run_source(wikibooks, db_path)
     assert last_run(db_path)["status"] == "failed"
+
+
+# --- Английский Викиучебник ---
+
+
+EN_PAGE = """{{recipesummary|category=Cake recipes|servings=10|time=60 minutes|difficulty=3|image=[[Image:Cake.jpg|300px]]
+}}
+{{recipe}} | [[Cookbook:Dessert|Dessert]]
+
+A soft cake.
+
+==Ingredients==
+* 110 [[Cookbook:Gram|g]] [[Cookbook:Butter|butter]]
+* 2 eggs
+
+==Procedure==
+# Mix everything.
+# Bake.
+
+==Notes, tips, and variations==
+* Add nuts.
+"""
+
+
+def test_english_markup_goes_through_same_extractor():
+    from parser.sources.wikibooks_en import to_extractor_markup
+
+    [recipe] = extract_recipes("Cookbook:Cake", to_extractor_markup(EN_PAGE))
+    assert recipe.title == "Cake"
+    assert texts(recipe) == ["110 g butter", "2 eggs"]
+    assert recipe.steps == ["Mix everything", "Bake"]
+    assert recipe.servings_text == "10"
+    assert recipe.time_text == "60 minutes"
+    assert recipe.difficulty_text == "3"
+    assert recipe.image_url.endswith("/Cake.jpg")
+
+
+@pytest.mark.parametrize(
+    "heading", ["Directions", "Method", "Instructions", "Preparation", "Procedure"]
+)
+def test_english_step_headings(heading):
+    from parser.sources.wikibooks_en import to_extractor_markup
+
+    page = f"== Ingredients ==\n* salt\n== {heading} ==\n# Add salt\n"
+    assert extract_recipes("Cookbook:X", to_extractor_markup(page))[0].steps == ["Add salt"]
+
+
+def translated_file(tmp_path, recipes):
+    path = tmp_path / "translated.jsonl"
+    page = {"id": "7", "revision": "9", "title": "Cookbook:Cake", "recipes": recipes}
+    path.write_text(json.dumps(page, ensure_ascii=False) + "\n", encoding="utf-8")
+    return path
+
+
+def test_translated_source_saves_recipes(tmp_path, db_path):
+    from parser.sources.wikibooks_en import WikibooksEnSource
+
+    recipe = {
+        "title": "Пирог", "source_url": "https://en.wikibooks.org/wiki/Cookbook:Cake",
+        "ingredients": [{"text": "2 яйца", "group": None}], "steps": ["Смешать"],
+        "ingredient_notes": [], "description": None, "category": None, "cuisine": None,
+        "time_text": None, "servings_text": None, "difficulty_text": None,
+        "calories_text": None, "image_url": None,
+    }  # fmt: skip
+    source = WikibooksEnSource(translated_file(tmp_path, [recipe]))
+
+    stats = run_source(source, db_path)
+
+    assert (stats.parsed, stats.recipes) == (1, 1)
+    assert run_source(source, db_path).skipped == 1
+
+
+def test_page_without_translated_recipes_is_rejected(tmp_path, db_path):
+    from parser.sources.wikibooks_en import WikibooksEnSource
+
+    assert run_source(WikibooksEnSource(translated_file(tmp_path, [])), db_path).rejected == 1
+
+
+def test_missing_translation_file_is_reported(tmp_path, db_path):
+    from parser.sources.wikibooks_en import WikibooksEnSource
+
+    with pytest.raises(SourceUnavailable, match="перевод"):
+        run_source(WikibooksEnSource(tmp_path / "none.jsonl"), db_path)
+
+
+def test_translated_recipe_is_marked_in_database(tmp_path, db_path):
+    from core.recipe_manager import import_raw_recipes
+    from parser.sources.wikibooks_en import WikibooksEnSource
+
+    recipe = {
+        "title": "Пирог", "source_url": "https://en.wikibooks.org/wiki/Cookbook:Cake",
+        "ingredients": [{"text": "2 яйца", "group": None}], "steps": ["Смешать"],
+        "ingredient_notes": [], "description": None, "category": None, "cuisine": None,
+        "time_text": None, "servings_text": None, "difficulty_text": None,
+        "calories_text": None, "image_url": None,
+    }  # fmt: skip
+    run_source(WikibooksEnSource(translated_file(tmp_path, [recipe])), db_path)
+    import_raw_recipes(db_path)
+    with closing(connect(db_path)) as conn:
+        assert "машинный перевод" in conn.execute("SELECT source FROM recipes").fetchone()[0]
