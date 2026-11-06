@@ -890,3 +890,14 @@ def test_translated_title_uses_manual_fix(title, page, expected):
     from parser.sources.wikibooks_en import clear_title
 
     assert clear_title(title, page) == expected
+
+
+def test_excluded_page_is_rejected(tmp_path, db_path):
+    from parser.sources.wikibooks_en import WikibooksEnSource
+
+    path = tmp_path / "translated.jsonl"
+    page = {"id": "7", "revision": "9", "title": "Cookbook:Grilled Dog", "recipes": [{"title": "X"}]}
+    path.write_text(json.dumps(page, ensure_ascii=False) + "
+", encoding="utf-8")
+
+    assert run_source(WikibooksEnSource(path), db_path).rejected == 1

@@ -24,6 +24,14 @@ from parser.base_parser import (
 BASE_URL = "https://en.wikibooks.org/wiki/"
 TRANSLATED_FILE = config.SOURCES_DIR / "wikibooks_en_ru.jsonl"
 
+# Не еда для этого приложения: мясо человека и собаки, каннабис, охраняемые животные
+EXCLUDED_PAGES = {
+    "Cookbook:Cannabutter", "Cookbook:Dog Biscuits", "Cookbook:Green Turtle Soup",
+    "Cookbook:Grilled Dog", "Cookbook:Iguana Pozole", "Cookbook:Kangaroo",
+    "Cookbook:Magic Brownies", "Cookbook:Placenta Stew", "Cookbook:Placenta with Broccoli",
+    "Cookbook:Roast Iguana with Birria Marinade", "Cookbook:Shark Fin Soup",
+    "Cookbook:Space Cake", "Cookbook:Spicy Placenta with Rice Noodles",
+}  # fmt: skip
 TITLE_FIXES_FILE = Path(__file__).with_name("wikibooks_en_titles.txt")
 ROMAN_RE = re.compile(r"\s(?:i|ii|iii|iv|v|vi)$")
 SUMMARY_RE = re.compile(r"\{\{\s*recipesummary", re.I)
@@ -102,7 +110,7 @@ class WikibooksEnSource(BaseSource):
 
     def extract(self, item: SourceItem) -> list[RawRecipe]:
         recipes = json.loads(item.content)["recipes"]
-        if not recipes:
+        if not recipes or item.title in EXCLUDED_PAGES:
             raise NoRecipeFound("Нет разделов состава и приготовления")
         return [
             RawRecipe(

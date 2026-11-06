@@ -229,7 +229,6 @@ Campfire Banana Boat|Банан с шоколадом на костре
 Campfire Barbecue Chicken Wings|Куриные крылышки барбекю на костре
 Campfire Trout|Форель на костре
 Candied Sweet Potatoes|Засахаренный батат
-Cannabutter|Масло с каннабисом
 Canning|Домашнее консервирование
 Cape Malay Butter Chicken|Масляная курица по-капско-малайски
 Caponata (Sicilian Eggplant and Vegetables)|Капоната (сицилийские баклажаны с овощами)
@@ -473,7 +472,6 @@ Deviled Eggs|Фаршированные яйца
 Dill Cucumber Salad|Огуречный салат с укропом
 Dirty Desert Fried Eggs|Яичница с острыми специями
 Dirty Rice|Рис «Грязный» по-каджунски
-Dog Biscuits|Печенье для собак
 Dole Pineapple Upside-Down Cake|Ананасовый перевёрнутый пирог
 Double Chocolate Brownies|Брауни с двойным шоколадом
 Double Pea Soup|Суп из двух видов гороха
@@ -635,7 +633,6 @@ Green Chicken Curry with Coconut Milk|Зелёное карри с курице�
 Green Chili Beef Stew|Говядина, тушённая с зелёным чили
 Green Mango and Cumin Drink (Aam Panna)|Аам панна (напиток из зелёного манго с кумином)
 Green Spinach Food Coloring|Зелёный пищевой краситель из шпината
-Green Turtle Soup|Суп из зелёной черепахи
 Grenadine|Гренадин
 Grenadine Soda|Газировка с гренадином
 Grill Seasoning|Приправа для гриля
@@ -643,7 +640,6 @@ Grilled Aubergine|Баклажаны на гриле
 Grilled Bananas with Coffee Syrup|Бананы на гриле с кофейным сиропом
 Grilled Chicken and Arugula Salad|Салат с курицей на гриле и руколой
 Grilled Cornish Hens|Корнуэльские цыплята на гриле
-Grilled Dog|Хот-дог на гриле
 Grilled Eggplant with Garlic Butter|Баклажаны на гриле с чесночным маслом
 Grilled Filet Mignon|Филе-миньон на гриле
 Grilled Filet Mignon with a Cognac Reduction|Филе-миньон на гриле с коньячным соусом
@@ -751,7 +747,6 @@ Huevos Rancheros|Уэвос ранчерос (яичница по-мексика
 Hummus I|Хумус I
 Hummus with Sprouted Chickpea|Хумус из пророщенного нута
 Hush Puppies|Кукурузные шарики хаш паппис
-Iguana Pozole|Посоле с игуаной
 Indian Beans|Фасоль по-индийски
 Indian Butter Chicken I|Масляная курица по-индийски I
 Indian Hard Tack (Baati)|Баати (индийские твёрдые лепёшки)
@@ -795,7 +790,6 @@ Jersey Breakfast Dog|Хот-дог на завтрак
 Jollof Rice|Рис джолоф
 Kabab Barg (Persian Grilled Meat)|Кебаб барг (персидское мясо на гриле)
 Kale and Garlic Pasta|Паста с кале и чесноком
-Kangaroo|Кенгурятина
 Kansas City Barbecue Sauce|Соус барбекю по-канзасски
 Karma-Free Diet|Диета без кармы
 Kashkaval Pane (Bulgarian Fried Cheese)|Кашкавал пане (болгарский жареный сыр)
@@ -879,7 +873,6 @@ Macaroni and Cheese II|Макароны с сыром II
 Madbucha (North African Peppers and Tomatoes)|Мадбуча (перец с помидорами по-североафрикански)
 Madeleines|Печенье мадлен
 Madras Filter Coffee|Кофе по-мадрасски
-Magic Brownies|Брауни с каннабисом
 Maharashtrian Deep Fried Chickpea Dough Curry Snacks (Pakoda)|Пакода (жареные закуски из нутового теста)
 Malawach (Flaky Flatbread)|Малавах (слоёная лепёшка)
 Malpua (South Asian Sweet Pancake)|Мальпуа (индийские сладкие оладьи)
@@ -1250,7 +1243,6 @@ Rissoles|Рисоли (мясные котлеты)
 Roast Butternut, Biltong and Brown Rice Salad|Салат с запечённой тыквой, билтонгом и бурым рисом
 Roast Chicken|Запечённая курица
 Roast Chicken on Salt|Курица, запечённая на соли
-Roast Iguana with Birria Marinade|Запечённая игуана в маринаде биррия
 Roast Leg of Lamb with Gravy|Запечённая баранья нога с подливкой
 Roast Pork|Запечённая свинина
 Roast Pork Loin with Cranberry Stuffing|Запечённая корейка с клюквенной начинкой
@@ -1427,7 +1419,6 @@ Southwestern Scramble|Болтунья в юго-западном стиле
 Soy Mustard Lamb Chops|Бараньи отбивные с соей и горчицей
 Soy Sauce Chicken|Курица в соевом соусе
 Soy-Lentil-Vegetable Stew|Рагу из сои, чечевицы и овощей
-Space Cake|Кекс с каннабисом
 Spaetzle|Шпецле
 Spaghetti Bake|Запечённые спагетти
 Spaghetti Pie|Запеканка из спагетти
