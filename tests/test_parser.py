@@ -897,7 +897,6 @@ def test_excluded_page_is_rejected(tmp_path, db_path):
 
     path = tmp_path / "translated.jsonl"
     page = {"id": "7", "revision": "9", "title": "Cookbook:Grilled Dog", "recipes": [{"title": "X"}]}
-    path.write_text(json.dumps(page, ensure_ascii=False) + "
-", encoding="utf-8")
+    path.write_text(json.dumps(page, ensure_ascii=False) + "\n", encoding="utf-8")
 
     assert run_source(WikibooksEnSource(path), db_path).rejected == 1
