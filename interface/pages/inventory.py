@@ -36,8 +36,8 @@ from interface.components.shared import (
     show_flash,
 )
 
-OVERDUE_COLOR = "#B3261E"
-SOON_COLOR = "#8A5A00"
+# (просрочено, скоро испортится): на тёмном фоне нужны более светлые оттенки
+EXPIRY_COLORS = {"light": ("#B3261E", "#8A5A00"), "dark": ("#FF8A80", "#E6B450")}
 
 show_flash()
 st.title("Инвентарь")
@@ -118,7 +118,8 @@ def expiry_style(items):
     for item in items:
         days = item.days_left()
         if days is not None and days <= EXPIRING_SOON_DAYS:
-            colors[expiry_label(item.expires_on)] = OVERDUE_COLOR if days < 0 else SOON_COLOR
+            overdue, soon = EXPIRY_COLORS[st.context.theme.type or "light"]
+            colors[expiry_label(item.expires_on)] = overdue if days < 0 else soon
     return lambda label: f"color: {colors[label]}" if label in colors else ""
 
 
