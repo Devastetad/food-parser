@@ -1022,3 +1022,24 @@ def test_generator_uses_strict_mode_by_default(app_db):
     button(app, "Составить план").click().run()
     assert not app.exception
     assert "из ваших продуктов" in text_of(app)
+
+
+def test_white_flour_at_home_covers_recipe_with_wheat_flour(tmp_path):
+    from contextlib import closing
+
+    from core.ingredient_matcher import IngredientMatcher, find_ingredient, ingredient_key
+    from core.inventory_manager import add_item
+    from core.stock import Stock
+    from database.database import connect, init_db
+
+    path = tmp_path / "flour.db"
+    init_db(path, tmp_path / "backups")
+    with closing(connect(path)) as conn:
+        IngredientMatcher(conn)  # заводит «Мука пшеничная»
+        conn.execute(
+            "INSERT OR IGNORE INTO ingredients (name, normalized_name) VALUES (?, ?)",
+            ("Мука белая", ingredient_key("Мука белая")),
+        )
+        add_item(conn, "Мука белая", 1000, "г")
+        wheat = find_ingredient(conn, "Мука пшеничная")
+        assert Stock.load(conn).available_grams(wheat) == 1000
