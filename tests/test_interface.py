@@ -272,3 +272,16 @@ def test_phone_gets_cards_instead_of_table(app_db, monkeypatch):
 def test_computer_keeps_table(app_db):
     with_db(app_db, lambda conn: add_item(conn, "Рис", 1, "кг"))
     assert not any(item.label == "Закончился" for item in run("inventory.py").button)
+
+
+def test_quick_add_shows_preview_then_adds(app_db):
+    app = run("inventory.py")
+    app.text_area[0].set_value("молоко 1 л, яйца 10").run()
+    assert "Яйцо — 10 шт" in text_of(app)
+    assert with_db(app_db, list_items) == []
+
+    next(item for item in app.button if item.label == "Добавить продуктов: 2").click().run()
+
+    assert not app.exception
+    assert sorted(item.name for item in with_db(app_db, list_items)) == ["Молоко", "Яйцо"]
+    assert app.text_area[0].value in ("", None)

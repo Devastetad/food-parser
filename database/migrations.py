@@ -210,7 +210,12 @@ CREATE TABLE shopping_checks (
 );
 """
 
-MIGRATIONS = [V1_INITIAL, V2_PARSER, V3_NORMALIZED, V4_PLANNING]
+# Условия, с которыми составлен план: по ним подбираются замены блюд
+V5_PLAN_PARAMS = """
+ALTER TABLE meal_plans ADD COLUMN params TEXT NOT NULL DEFAULT '{}' CHECK (json_valid(params));
+"""
+
+MIGRATIONS = [V1_INITIAL, V2_PARSER, V3_NORMALIZED, V4_PLANNING, V5_PLAN_PARAMS]
 
 
 def get_version(conn: sqlite3.Connection) -> int:

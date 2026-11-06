@@ -3,6 +3,7 @@
 Всё считается в граммах, поэтому «2 шт лука» и «300 г лука» сравнимы. Партии расходуются
 в порядке срока годности: первым уходит то, что испортится раньше.
 """
+import re
 import sqlite3
 from copy import deepcopy
 from dataclasses import dataclass
@@ -16,6 +17,16 @@ from core.units import grams_per_unit, to_grams
 # Этого не надо покупать и хранить в инвентаре
 ALWAYS_AVAILABLE = {"Вода"}
 EPSILON_GRAMS = 0.01
+SEASONING_RE = re.compile(
+    r"соль|перец|перца|зелень|петрушк|укроп|кинз|базилик|лавров|специ|приправ|пряност|кориандр|"
+    r"тмин|гвоздик|мускат|паприк|карри|орегано|тимьян|майоран|чабер|розмарин|корица|ванил|мята",
+    re.I,
+)
+
+
+def is_optional(line: RecipeLine) -> bool:
+    """Приправа «по вкусу»: без неё блюдо всё равно получится."""
+    return line.quantity is None and bool(SEASONING_RE.search(line.name))
 
 
 class LineStatus(Enum):

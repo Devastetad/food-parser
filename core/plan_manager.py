@@ -5,7 +5,15 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 
 from core.history_manager import cooked_recipe_ids
-from core.meal_planner import MEALS, NEW_ONLY, Plan, PlanRuleViolation
+from core.meal_planner import (
+    MEALS,
+    NEW_ONLY,
+    Plan,
+    PlanRequest,
+    PlanRuleViolation,
+    Replacement,
+    find_replacements,
+)
 from database.database import transaction
 
 
@@ -30,6 +38,7 @@ class SavedPlan:
     mode: str
     warnings: list[str]
     items: list[SavedItem]
+    params: dict
 
     @property
     def end(self) -> date:
@@ -43,6 +52,32 @@ def period_name(days: int) -> str:
     return {1: "День", 7: "Неделя", 30: "Месяц"}.get(days, f"{days} дн.")
 
 
+def _params_of(request: PlanRequest) -> dict:
+    return {
+        "meals_per_day": request.meals_per_day,
+        "max_minutes": request.max_minutes,
+        "include_unknown_time": request.include_unknown_time,
+        "budget": request.budget,
+        "diets": request.diets,
+        "excluded": request.excluded,
+        "equipment": None if request.equipment is None else sorted(request.equipment),
+        "allow_old": request.allow_old,
+        "pinned": request.pinned,
+        "target_kcal": request.target_kcal,
+        "only_from_stock": request.only_from_stock,
+    }
+
+
+def _request_of(plan: "SavedPlan") -> PlanRequest:
+    """Условия плана. У планов, сохранённых раньше, их нет: действуют значения по умолчанию."""
+    params = dict(plan.params)
+    if params.get("equipment") is not None:
+        params["equipment"] = set(params["equipment"])
+    return PlanRequest(
+        start=plan.start, days=plan.days, people=plan.people, mode=plan.mode, **params
+    )
+
+
 def save_plan(conn: sqlite3.Connection, plan: Plan) -> int:
     """Сохраняет план. Режим B ещё раз сверяется с историей на момент сохранения."""
     request = plan.request
@@ -54,8 +89,8 @@ def save_plan(conn: sqlite3.Connection, plan: Plan) -> int:
     name = f"{period_name(request.days)} с {request.start:%d.%m.%Y}"
     with transaction(conn):
         plan_id = conn.execute(
-            "INSERT INTO meal_plans (name, start_date, days, people, mode, warnings) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO meal_plans (name, start_date, days, people, mode, warnings, params) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
             (
                 name,
                 request.start.isoformat(),
@@ -63,6 +98,7 @@ def save_plan(conn: sqlite3.Connection, plan: Plan) -> int:
                 request.people,
                 request.mode,
                 json.dumps(plan.warnings, ensure_ascii=False),
+                json.dumps(_params_of(request), ensure_ascii=False),
             ),
         ).lastrowid
         conn.executemany(
@@ -91,7 +127,7 @@ def _read(conn: sqlite3.Connection, row: sqlite3.Row) -> SavedPlan:
     ]  # fmt: skip
     return SavedPlan(
         row["id"], row["name"], date.fromisoformat(row["start_date"]), row["days"], row["people"],
-        row["mode"], json.loads(row["warnings"]), items,
+        row["mode"], json.loads(row["warnings"]), items, json.loads(row["params"]),
     )  # fmt: skip
 
 
@@ -116,6 +152,29 @@ def current_plan(conn: sqlite3.Connection, today: date | None = None) -> SavedPl
 
 def delete_plan(conn: sqlite3.Connection, plan_id: int) -> None:
     conn.execute("DELETE FROM meal_plans WHERE id = ?", (plan_id,))
+
+
+def replacements_for(
+    conn: sqlite3.Connection, plan: SavedPlan, item: SavedItem, limit: int = 5
+) -> list[Replacement]:
+    others = [
+        (other.day, other.meal, other.recipe_id, other.cooked_on is not None)
+        for other in plan.items
+        if other.id != item.id
+    ]
+    return find_replacements(
+        conn, _request_of(plan), others, item.day, item.meal, item.recipe_id, limit
+    )
+
+
+def replace_item(conn: sqlite3.Connection, plan: SavedPlan, item: SavedItem, recipe_id: int) -> None:
+    """Меняет блюдо. Режим «только новые» сверяется с историей и здесь."""
+    if plan.mode == NEW_ONLY and recipe_id in cooked_recipe_ids(conn):
+        raise PlanRuleViolation("Это блюдо уже приготовлено, а план только из новых")
+    conn.execute(
+        "UPDATE meal_plan_items SET recipe_id = ? WHERE id = ? AND cooked_on IS NULL",
+        (recipe_id, item.id),
+    )
 
 
 def meal_title(meal: str) -> str:

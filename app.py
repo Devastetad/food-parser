@@ -7,6 +7,7 @@ import streamlit as st
 import config
 from core.cloud_sync import CloudSync, SyncError
 from database.database import BackupError, SchemaTooNewError, init_db
+from database.migrations import MIGRATIONS
 from interface.components.shared import SYNC_KEY, open_db, read_secret
 
 st.set_page_config(
@@ -15,8 +16,8 @@ st.set_page_config(
 
 
 @st.cache_resource
-def prepare_database() -> None:
-    """Один раз на запуск сервера: Streamlit перевыполняет скрипт при каждом действии."""
+def prepare_database(schema_version: int) -> None:
+    """Один раз на запуск сервера и версию схемы: новая миграция применится без перезапуска."""
     if config.SEED_DB.exists() and not config.DB_PATH.exists():
         config.DB_PATH.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(config.SEED_DB, config.DB_PATH)
@@ -33,7 +34,7 @@ def connect_cloud(token: str, repository: str) -> CloudSync:
 
 
 try:
-    prepare_database()
+    prepare_database(len(MIGRATIONS))
     token, repository = read_secret("GITHUB_TOKEN"), read_secret("DATA_REPO")
     sync = connect_cloud(token, repository) if token and repository else None
 except SyncError as error:

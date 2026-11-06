@@ -18,6 +18,7 @@ from core.ingredient_matcher import (
 from core.inventory_manager import (
     InventoryError,
     add_item,
+    add_quick_items,
     count_recipes_with,
     delete_item,
     get_item,
@@ -28,6 +29,7 @@ from core.inventory_manager import (
     list_unmatched,
     mark_finished,
     parse_quantity,
+    parse_quick_list,
     restore_item,
     update_item,
 )
@@ -414,3 +416,67 @@ def test_expiry_label(offset, text):
 
 def test_no_expiry_label():
     assert expiry_label(None) == ""
+
+
+# --- Быстрое добавление списком ---
+
+
+def quick(text):
+    return [(item.name, item.quantity, item.unit) for item in parse_quick_list(text)]
+
+
+def test_quick_list_example():
+    assert quick("молоко 1 л, яйца 10, лук 1 кг") == [
+        ("Молоко", 1, "л"), ("Яйцо", 10, "шт"), ("Лук", 1, "кг"),
+    ]  # fmt: skip
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("мука 1,5 кг", [("Мука", 1.5, "кг")]),
+        ("мука 1.5 кг", [("Мука", 1.5, "кг")]),
+        ("сметана 200 г", [("Сметана", 200, "г")]),
+        ("вода 2 л", [("Вода", 2, "л")]),
+        ("яйца 12", [("Яйцо", 12, "шт")]),
+        ("10 яиц", [("Яйца", 10, "шт")]),
+        ("200 г муки", [("Мука", 200, "г")]),
+        ("соль", [("Соль", 1, "шт")]),
+        ("чеснок 3 зубчика", [("Чеснок", 3, "зубчик")]),
+        ("корица: щепотка", [("Корица", 0.5, "г")]),
+        ("масло сливочное 200 г", [("Масло сливочное", 200, "г")]),
+    ],
+)
+def test_quick_line_formats(text, expected):
+    assert quick(text) == expected
+
+
+@pytest.mark.parametrize("separator", [", ", "; ", "\n", ",\n"])
+def test_quick_list_separators(separator):
+    assert len(quick(separator.join(["рис 1 кг", "лук 2 шт"]))) == 2
+
+
+@pytest.mark.parametrize("text", ["", "   ", None, ",, ;", "\n\n"])
+def test_quick_list_empty(text):
+    assert quick(text) == []
+
+
+def test_quick_items_are_added_and_recognized(db):
+    assert add_quick_items(db, parse_quick_list("молоко 1 л, лук 1 кг")) == 2
+    items = {item.name: item for item in list_items(db)}
+    assert items["Лук"].ingredient_name == "Лук репчатый"
+    assert items["Молоко"].quantity == 1
+
+
+def test_quick_items_merge_with_existing_batch(db):
+    add_item(db, "Рис", 1, "кг")
+    add_quick_items(db, parse_quick_list("рис 2 кг"))
+    assert [item.quantity for item in list_items(db)] == [3]
+
+
+def test_quick_items_are_added_all_or_nothing(db):
+    from core.inventory_manager import QuickItem
+
+    with pytest.raises(InventoryError):
+        add_quick_items(db, [QuickItem("Рис", 1, "кг"), QuickItem("Лук", 1, "ведро")])
+    assert list_items(db) == []

@@ -10,6 +10,7 @@ from core.inventory_manager import (
     EXPIRING_SOON_DAYS,
     InventoryError,
     add_item,
+    add_quick_items,
     count_recipes_with,
     delete_item,
     get_item,
@@ -19,6 +20,7 @@ from core.inventory_manager import (
     list_unmatched,
     mark_finished,
     parse_quantity,
+    parse_quick_list,
     restore_item,
     update_item,
 )
@@ -66,6 +68,30 @@ def add_form() -> None:
         else:
             flash(f"Добавлено: {name}")
             st.rerun()
+
+
+def quick_add() -> None:
+    """Сначала показываем, как понят список: ошибка разбора видна до записи."""
+    with st.expander("Добавить списком", icon=":material/playlist_add:"):
+        version = st.session_state.setdefault("quick_version", 0)
+        text = st.text_area(
+            "Продукты через запятую или с новой строки",
+            placeholder="молоко 1 л, яйца 10, лук 1 кг",
+            key=f"quick_{version}",
+        )
+        items = parse_quick_list(text)
+        for item in items:
+            st.markdown(f"{item.name} — {format_quantity(item.quantity)} {item.unit}")
+        if items and st.button(f"Добавить продуктов: {len(items)}", type="primary"):
+            try:
+                with open_db() as conn:
+                    count = add_quick_items(conn, items)
+            except (InventoryError, sqlite3.Error) as error:
+                st.error(f"Ничего не добавлено. {error}")
+            else:
+                st.session_state["quick_version"] = version + 1
+                flash(f"Добавлено продуктов: {count}")
+                st.rerun()
 
 
 def stock_frame(items) -> pd.DataFrame:
@@ -285,6 +311,7 @@ if is_phone():
         add_form()
 else:
     add_form()
+quick_add()
 with open_db() as conn:
     stock = list_items(conn)
     finished = list_finished(conn)

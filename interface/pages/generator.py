@@ -68,6 +68,13 @@ meals = meals_column.number_input(
 )
 people = people_column.number_input("Порций на блюдо", min_value=1, max_value=20, value=preferences.people)
 
+only_from_stock = st.checkbox(
+    "Только из продуктов, которые есть дома",
+    value=True,
+    help="Блюдо попадёт в план, только если все продукты есть в нужном количестве. "
+    "Приправы по вкусу можно не иметь: блюдо получится и без них.",
+)
+
 time_column, budget_column, kcal_column = st.columns(3)
 max_minutes = time_column.number_input(
     "Время на блюдо, минут", min_value=5, value=preferences.max_minutes, step=5, placeholder="Без лимита"
@@ -124,6 +131,7 @@ if st.button("Составить план", type="primary"):
         allow_old=allow_old,
         pinned=pinned,
         target_kcal=target_kcal,
+        only_from_stock=only_from_stock,
     )
     try:
         with st.spinner("Подбираю блюда"), open_db() as conn:

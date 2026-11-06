@@ -28,6 +28,8 @@ from core.plan_manager import (
     get_plan,
     list_plans,
     period_name,
+    replace_item,
+    replacements_for,
     save_plan,
 )
 from core.preferences import (
@@ -706,6 +708,7 @@ def test_generator_builds_preview(app_db):
     with_db(app_db, lambda conn: fill_mains(conn, 5))
     with_db(app_db, lambda conn: conn.execute("UPDATE kitchen_equipment SET is_available = 1"))
     app = app_page("generator.py")
+    next(box for box in app.checkbox if box.label.startswith("Только из продуктов")).uncheck()
     app.selectbox[0].set_value("День")
     app.number_input[0].set_value(1)
     button(app, "Составить план").click().run()
@@ -801,3 +804,221 @@ def test_variants_of_one_dish_are_spread_out(db):
     add_recipe(db, "Рагу", [("Лук", 100, "г"), ("Соль", None, None)])
     titles = [item.title for item in build_plan(db, request(days=2)).items]
     assert len({dish_family(title) for title in titles}) == 2
+
+
+# --- Замена блюда в плане ---
+
+
+def saved(conn, **fields):
+    return get_plan(conn, save_plan(conn, build_plan(conn, request(**fields))))
+
+
+def test_replacements_exclude_current_and_other_plan_dishes(db):
+    fill_mains(db, 6)
+    plan = saved(db, days=3)
+    used = {item.recipe_id for item in plan.items}
+    options = replacements_for(db, plan, plan.items[0])
+    assert options
+    assert not {option.recipe_id for option in options} & used
+
+
+def test_replacement_respects_saved_conditions(db):
+    fill_mains(db, 2)
+    slow = add_recipe(db, "Долгое", [("Лук", 100, "г"), ("Соль", None, None)], minutes=300)
+    oven = add_recipe(db, "В духовке", [("Лук", 100, "г"), ("Соль", None, None)], equipment=("Духовка",))
+    meat = add_recipe(db, "Мясное", [("Говядина", 100, "г"), ("Соль", None, None)])
+    good = add_recipe(db, "Подходит", [("Рис", 100, "г"), ("Соль", None, None)])
+    plan = saved(db, max_minutes=60, equipment={"Плита"}, diets=["vegetarian"])
+    ids = {option.recipe_id for option in replacements_for(db, plan, plan.items[0], limit=20)}
+    assert good in ids
+    assert not ids & {slow, oven, meat}
+
+
+def test_replacement_in_new_only_plan_never_offers_cooked(db):
+    recipes = fill_mains(db, 4)
+    record_cooked(db, recipes[0], TODAY, 2, today=TODAY)
+    plan = saved(db, mode=NEW_ONLY)
+    ids = {option.recipe_id for option in replacements_for(db, plan, plan.items[0], limit=20)}
+    assert recipes[0] not in ids
+
+
+def test_replace_rechecks_new_only_rule(db):
+    recipes = fill_mains(db, 3)
+    plan = saved(db, mode=NEW_ONLY)
+    other = next(recipe_id for recipe_id in recipes if recipe_id != plan.items[0].recipe_id)
+    record_cooked(db, other, TODAY, 2, today=TODAY)
+    with pytest.raises(PlanRuleViolation):
+        replace_item(db, plan, plan.items[0], other)
+
+
+def test_replace_changes_dish_and_shopping_list(db):
+    add_recipe(db, "Морковное", [("Морковь", 500, "г"), ("Соль", None, None)])
+    plan = saved(db)
+    other = add_recipe(db, "Луковое", [("Лук", 300, "г"), ("Соль", None, None)])
+    replace_item(db, plan, plan.items[0], other)
+    fresh = get_plan(db, plan.id)
+    assert fresh.items[0].recipe_id == other
+    names = {line.name for line in build_shopping_list(db, plan.id)}
+    assert "Лук репчатый" in names and "Морковь" not in names
+
+
+def test_cooked_dish_cannot_be_replaced(db):
+    [recipe_id] = fill_mains(db, 1)
+    plan = saved(db)
+    record_cooked(db, recipe_id, TODAY, 2, today=TODAY)
+    other = add_recipe(db, "Другое", [("Лук", 100, "г"), ("Соль", None, None)])
+    replace_item(db, get_plan(db, plan.id), plan.items[0], other)
+    assert get_plan(db, plan.id).items[0].recipe_id == recipe_id
+
+
+def test_replacement_does_not_take_stock_of_neighbour_dishes(db):
+    add_recipe(db, "Первое", [("Курица", 800, "г"), ("Соль", None, None)])
+    add_recipe(db, "Второе", [("Курица", 800, "г"), ("Соль", None, None)])
+    add_recipe(db, "Третье", [("Курица", 800, "г"), ("Соль", None, None)])
+    add_item(db, "Курица", 1, "кг")
+    add_item(db, "Соль", 1, "кг")
+    plan = saved(db, days=2)
+    [option] = [
+        option for option in replacements_for(db, plan, plan.items[1], limit=5)
+    ]
+    assert option.cost > 0  # из килограмма 800 г уже заняты первым блюдом
+
+
+def test_old_plan_without_params_still_offers_replacements(db):
+    fill_mains(db, 3)
+    plan = saved(db)
+    db.execute("UPDATE meal_plans SET params = '{}'")
+    assert replacements_for(db, get_plan(db, plan.id), plan.items[0])
+
+
+def test_plans_page_swap_flow(app_db):
+    with_db(app_db, lambda conn: fill_mains(conn, 3))
+    with_db(app_db, lambda conn: save_plan(conn, build_plan(conn, request(start=date.today()))))
+    before = with_db(app_db, list_plans)[0].items[0].recipe_id
+
+    app = app_page("plans.py")
+    button(app, "Заменить").click().run()
+    assert not app.exception
+    option = next(item for item in app.button if "докупить" in item.label)
+    option.click().run()
+
+    assert not app.exception
+    assert with_db(app_db, list_plans)[0].items[0].recipe_id != before
+
+
+def test_plans_page_swap_can_be_cancelled(app_db):
+    with_db(app_db, lambda conn: fill_mains(conn, 3))
+    with_db(app_db, lambda conn: save_plan(conn, build_plan(conn, request(start=date.today()))))
+    app = app_page("plans.py")
+    button(app, "Заменить").click().run()
+    button(app, "Отмена").click().run()
+    assert not any("докупить" in item.label for item in app.button)
+
+
+# --- Только из того, что есть дома ---
+
+
+def test_user_report_plan_uses_only_what_is_at_home(db):
+    """Случай пользователя: дома мука, яйца, вода, соль — никаких других продуктов в плане."""
+    noodles = add_recipe(db, "Лапша", [("Мука", 300, "г"), ("Яйцо", 2, "шт"), ("Вода", 100, "мл"), ("Соль", None, None)])
+    add_recipe(db, "Пирог с мясом", [("Мука", 300, "г"), ("Говядина", 300, "г")])
+    add_recipe(db, "Блины", [("Мука", 200, "г"), ("Молоко", 500, "мл")])
+    for name, quantity, unit in [("Мука", 2, "кг"), ("Яйцо", 10, "шт"), ("Соль", 1, "кг")]:
+        add_item(db, name, quantity, unit)
+
+    plan = build_plan(db, request(only_from_stock=True))
+
+    assert [item.recipe_id for item in plan.items] == [noodles]
+    assert plan.items[0].cost == 0
+
+
+def test_not_enough_quantity_is_refused(db):
+    add_recipe(db, "Много муки", [("Мука", 5000, "г"), ("Соль", None, None)])
+    add_item(db, "Мука", 1, "кг")
+    plan = build_plan(db, request(only_from_stock=True))
+    assert plan.items == []
+    assert "из ваших продуктов" in plan.warnings[0]
+
+
+def test_empty_home_gives_no_dishes(db):
+    add_recipe(db, "Блюдо")
+    plan = build_plan(db, request(only_from_stock=True))
+    assert plan.items == []
+    assert "Добавьте продукты" in plan.warnings[0]
+
+
+def test_seasoning_to_taste_does_not_block_but_real_product_does(db):
+    ok = add_recipe(db, "С перцем", [("Морковь", 100, "г"), ("Лук", 100, "г"), ("Перец чёрный", None, None)])
+    add_recipe(db, "Со сметаной", [("Морковь", 100, "г"), ("Лук", 100, "г"), ("Сметана", None, None)])
+    add_item(db, "Морковь", 1, "кг")
+    add_item(db, "Лук", 1, "кг")
+    assert plan_ids(db, only_from_stock=True) == [ok]
+
+
+def test_seasoning_with_exact_amount_is_required(db):
+    add_recipe(db, "Перечное", [("Морковь", 100, "г"), ("Перец чёрный", 20, "г")])
+    add_item(db, "Морковь", 1, "кг")
+    assert plan_ids(db, only_from_stock=True) == []
+
+
+def test_stock_runs_out_during_plan(db):
+    for number in range(3):
+        add_recipe(db, f"Блюдо {number}", [("Мука", 400, "г"), ("Соль", None, None)])
+    add_item(db, "Мука", 1, "кг")
+    plan = build_plan(db, request(days=3, only_from_stock=True))
+    assert len(plan.items) == 2
+    assert "подобрано 2 из 3" in plan.warnings[0]
+
+
+def test_any_cookable_dish_fills_any_meal(db):
+    bread = add_recipe(db, "Лепёшка", [("Мука", 100, "г"), ("Соль", None, None)], category="Другое")
+    add_item(db, "Мука", 1, "кг")
+    plan = build_plan(db, request(only_from_stock=True, meals_per_day=3))
+    assert plan.items[0].recipe_id == bread
+
+
+def test_sauce_is_still_not_a_meal(db):
+    add_recipe(db, "Заправка", [("Мука", 100, "г"), ("Соль", None, None)], category="Соусы")
+    add_item(db, "Мука", 1, "кг")
+    assert plan_ids(db, only_from_stock=True) == []
+
+
+def test_few_dishes_may_repeat_after_short_gap(db):
+    add_recipe(db, "Первое", [("Мука", 100, "г"), ("Соль", None, None)], category="Другое")
+    add_recipe(db, "Второе", [("Рис", 100, "г"), ("Соль", None, None)], category="Другое")
+    add_item(db, "Мука", 5, "кг")
+    add_item(db, "Рис", 5, "кг")
+    plan = build_plan(db, request(days=6, only_from_stock=True))
+    last = {}
+    for item in plan.items:
+        if item.recipe_id in last:
+            assert item.day - last[item.recipe_id] >= 3
+        last[item.recipe_id] = item.day
+    assert len(plan.items) == 4
+
+
+def test_strict_plan_needs_no_shopping(db):
+    add_recipe(db, "Блюдо", [("Морковь", 100, "г"), ("Перец чёрный", None, None)])
+    add_item(db, "Морковь", 1, "кг")
+    assert shopping(db, only_from_stock=True)[1] == []
+
+
+def test_replacement_in_strict_plan_needs_no_purchase(db):
+    add_recipe(db, "Первое", [("Морковь", 100, "г"), ("Соль", None, None)])
+    add_recipe(db, "Второе", [("Лук", 100, "г"), ("Соль", None, None)])
+    add_recipe(db, "Покупное", [("Говядина", 100, "г"), ("Соль", None, None)])
+    add_item(db, "Морковь", 1, "кг")
+    add_item(db, "Лук", 1, "кг")
+    plan = saved(db, only_from_stock=True)
+    titles = {option.title for option in replacements_for(db, plan, plan.items[0], limit=10)}
+    assert "Покупное" not in titles
+    assert titles
+
+
+def test_generator_uses_strict_mode_by_default(app_db):
+    with_db(app_db, lambda conn: fill_mains(conn, 5))
+    with_db(app_db, lambda conn: conn.execute("UPDATE kitchen_equipment SET is_available = 1"))
+    app = app_page("generator.py")
+    button(app, "Составить план").click().run()
+    assert not app.exception
+    assert "из ваших продуктов" in text_of(app)

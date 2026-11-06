@@ -144,9 +144,11 @@ def _read_measure(text: str) -> tuple[float | None, str | None, str] | None:
     return None
 
 
-def _with_default_unit(quantity: float, unit: str | None) -> str:
+def _with_default_unit(quantity: float, unit: str | None, bare_unit: str | None = None) -> str:
     if unit:
         return unit
+    if bare_unit:
+        return bare_unit
     return MASS if quantity >= NO_UNIT_MASS_FROM else "шт"
 
 
@@ -174,8 +176,9 @@ def _join_notes(*notes: str | None) -> str | None:
     return "; ".join(note for note in notes if note) or None
 
 
-def parse_ingredient(text: str) -> list[ParsedIngredient]:
-    """Разбирает строку состава. «Соль, перец по вкусу» даёт два ингредиента."""
+def parse_ingredient(text: str, bare_unit: str | None = None) -> list[ParsedIngredient]:
+    """Разбирает строку состава. «Соль, перец по вкусу» даёт два ингредиента.
+    bare_unit: единица для числа без единицы; в рецептах её угадываем по величине."""
     text = BACKSLASH_FRACTION_RE.sub("/", text)
     text = re.sub(r"^\\(?=\d)", "1/", text)  # «\4 ст.»: единица потерялась при разборе таблицы
     parentheses = [part.strip("() ") for part in PARENTHESES_RE.findall(text)]
@@ -186,7 +189,9 @@ def parse_ingredient(text: str) -> list[ParsedIngredient]:
         return []  # итоговая строка таблицы, заголовок «На 10 порций взять», время
 
     parsed = (
-        _parse_with_separator(plain) or _parse_leading(plain) or _parse_trailing(plain)
+        _parse_with_separator(plain, bare_unit)
+        or _parse_leading(plain, bare_unit)
+        or _parse_trailing(plain, bare_unit)
     )
     if parsed:
         name, quantity, unit, detail = parsed
@@ -214,7 +219,7 @@ def parse_ingredient(text: str) -> list[ParsedIngredient]:
     return [ParsedIngredient(name, note=_join_notes(name_note, note))] if name else []
 
 
-def _parse_with_separator(text: str):
+def _parse_with_separator(text: str, bare_unit: str | None = None):
     """«мука: 150 г», «Соль — щепотка», «Перец чёрный — по вкусу»."""
     match = SEPARATOR_RE.search(text)
     if not match:
@@ -226,14 +231,14 @@ def _parse_with_separator(text: str):
     if measure:
         quantity, unit, rest = measure
         if quantity is not None:
-            unit = _with_default_unit(quantity, unit)
+            unit = _with_default_unit(quantity, unit, bare_unit)
         return name, quantity, unit, rest or None
     if TO_TASTE_RE.search(right) or not right:
         return name, None, None, None
     return name, None, None, right
 
 
-def _parse_leading(text: str):
+def _parse_leading(text: str, bare_unit: str | None = None):
     """«2 ст. л. каперсов», «3–4 яйца», «200 гр муки»."""
     measure = _read_measure(text)
     if not measure or not measure[2]:
@@ -241,13 +246,13 @@ def _parse_leading(text: str):
     quantity, unit, rest = measure
     if not unit:
         # Номер строки таблицы: «1 Лук жареный 2 ст. л.». Настоящая мера стоит дальше
-        trailing = _parse_trailing(rest)
+        trailing = _parse_trailing(rest, bare_unit)
         if trailing:
             return trailing
     return rest, quantity, unit or "шт", None
 
 
-def _parse_trailing(text: str):
+def _parse_trailing(text: str, bare_unit: str | None = None):
     """«Говядина 160 грамм», «чеснок 5 г 4 дольки», «Соль 4 2 4 2»: берём первую меру."""
     for match in QUANTITY_RE.finditer(text):
         before = text[: match.start()]
@@ -256,7 +261,7 @@ def _parse_trailing(text: str):
         rest = text[match.end() :].lstrip()
         unit, factor, length = _read_unit(rest)
         quantity = _read_quantity(match) * factor
-        return before.strip(), quantity, _with_default_unit(quantity, unit), None
+        return before.strip(), quantity, _with_default_unit(quantity, unit, bare_unit), None
     return None
 
 

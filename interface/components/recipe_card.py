@@ -8,7 +8,7 @@ from core.equipment_manager import list_equipment
 from core.history_manager import RATINGS, HistoryError, cooked_summary, record_cooked
 from core.inventory_manager import InventoryError
 from core.recipe_manager import Recipe, get_recipe
-from core.stock import LineCheck, LineStatus, Stock, find_substitutes
+from core.stock import LineCheck, LineStatus, Stock, find_substitutes, is_optional
 from interface.components.shared import flash, format_quantity, open_db, plural
 
 DIFFICULTY = {"easy": "Просто", "medium": "Средне", "hard": "Сложно"}
@@ -37,6 +37,8 @@ def amount_label(check: LineCheck, factor: float) -> str:
 def status_label(check: LineCheck) -> str:
     if check.status is LineStatus.ENOUGH:
         return ":green[есть]"
+    if is_optional(check.line):
+        return ":gray[можно без этого]"
     if check.status is LineStatus.PARTIAL:
         missing = format_quantity(check.missing_quantity)
         return f":orange[не хватает {missing} {check.line.unit}]"
@@ -136,7 +138,11 @@ def show_recipe(recipe_id: int) -> None:
     checks = stock.check_recipe(recipe, factor)
     ingredients_section(checks, factor, stock)
 
-    to_buy = [check for check in checks if check.status is not LineStatus.ENOUGH]
+    to_buy = [
+        check
+        for check in checks
+        if check.status is not LineStatus.ENOUGH and not is_optional(check.line)
+    ]
     if to_buy:
         count = len(to_buy)
         st.caption(f"Докупить: {count} {plural(count, 'продукт', 'продукта', 'продуктов')}")

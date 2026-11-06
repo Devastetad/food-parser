@@ -13,7 +13,7 @@ from datetime import timedelta
 from core.inventory_manager import add_item
 from core.plan_manager import get_plan
 from core.recipe_manager import load_recipes
-from core.stock import ALWAYS_AVAILABLE, EPSILON_GRAMS, Stock
+from core.stock import ALWAYS_AVAILABLE, EPSILON_GRAMS, Stock, is_optional
 from core.units import CONVERTIBLE, INVENTORY_UNITS, grams_per_unit, to_grams
 from database.database import transaction
 
@@ -59,6 +59,8 @@ def _collect_needs(conn: sqlite3.Connection, plan_id: int) -> dict[int, _Need]:
         for line in recipe.lines:
             if line.name in ALWAYS_AVAILABLE:
                 continue
+            if plan.params.get("only_from_stock") and is_optional(line):
+                continue  # план из того, что есть: приправы по вкусу покупать незачем
             if line.quantity is None:
                 if stock.available_grams(line.ingredient_id) <= EPSILON_GRAMS:
                     need = needs.setdefault(line.ingredient_id, _Need(line.name))

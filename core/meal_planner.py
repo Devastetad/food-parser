@@ -15,7 +15,7 @@ from datetime import date, timedelta
 from core.history_manager import CookedSummary, cooked_recipe_ids, cooked_summary
 from core.preferences import has_excluded, violates_diet
 from core.recipe_manager import Recipe, load_recipes
-from core.stock import ALWAYS_AVAILABLE, LineStatus, Stock
+from core.stock import ALWAYS_AVAILABLE, LineStatus, Stock, is_optional
 from core.units import to_grams
 
 MIXED, NEW_ONLY = "mixed", "new"
@@ -44,7 +44,7 @@ BREAKFAST_RE = re.compile(
 # Заготовки и ингредиенты, а не блюда: их нельзя подать как приём пищи
 NOT_A_MEAL_RE = re.compile(
     r"\b(?:масло|бульон|маринад|тесто|закваск|заправк|соус|приправ|смесь|глазур|крем|начинк|"
-    r"фарш|основ[аы]|сироп|пюре томат|дюксель)",
+    r"фарш|основ[аы]|сироп|пюре томат|дюксель|фритюр)",
     re.I,
 )
 FAMILY_SUFFIX_RE = re.compile(r"(?:\s+\d+)?(?:\s*\(вариант \d+\))?$")
@@ -59,6 +59,8 @@ DEFAULT_PRICE_PER_KG = 300
 
 MIN_LINES = 2
 REPEAT_GAP_DAYS = 14
+STOCK_ONLY_REPEAT_GAP_DAYS = 3  # из малого набора продуктов выходит мало блюд
+NOT_MEAL_CATEGORIES = {"Соусы", "Напитки"}
 RECENT_DAYS = 14
 TIRED_DAYS = 60
 
@@ -96,6 +98,7 @@ class PlanRequest:
     allow_old: bool = True  # режим A: может ли алгоритм сам брать приготовленные блюда
     pinned: list[int] = field(default_factory=list)  # режим A: выбранные из истории
     target_kcal: int | None = None
+    only_from_stock: bool = False  # только то, что есть дома; приправы по вкусу не считаются
     seed: int | None = None
 
 
@@ -131,9 +134,12 @@ class PlanRuleViolation(Exception):
     """В план попало блюдо, запрещённое условиями. Такой план сохранять нельзя."""
 
 
-def is_eligible(recipe: Recipe, meal: str) -> bool:
+def is_eligible(recipe: Recipe, meal: str, any_slot: bool = False) -> bool:
+    """any_slot: блюд мало, поэтому подходит любое блюдо, а не только типичное для приёма."""
     if NOT_A_MEAL_RE.search(recipe.title):
         return False
+    if any_slot:
+        return recipe.category not in NOT_MEAL_CATEGORIES
     if recipe.category in MEAL_CATEGORIES[meal]:
         return True
     if meal != "breakfast" or NOT_FOR_BREAKFAST_RE.search(recipe.title):
@@ -194,6 +200,7 @@ class _Fit:
     missing_lines: int
     cost: float
     expiry_bonus: float
+    required_missing: int  # недостающее без учёта приправ по вкусу
 
 
 def evaluate_fit(
@@ -204,11 +211,12 @@ def evaluate_fit(
     categories: dict[int, str | None],
 ) -> _Fit:
     total = covered = cost = bonus = 0.0
-    missing = 0
+    missing = required_missing = 0
     for check in stock.check_recipe(recipe, factor):
         line = check.line
         if check.status is not LineStatus.ENOUGH:
             missing += 1
+            required_missing += not is_optional(line)
         if line.quantity is None or line.name in ALWAYS_AVAILABLE:
             continue
         needed = to_grams(line.quantity * factor, line.unit, line.name)
@@ -224,7 +232,7 @@ def evaluate_fit(
                 days = (expires - on_date).days
                 bonus += EXPIRY_WEIGHT * max(0.0, 1 - days / EXPIRY_HORIZON_DAYS)
     coverage = covered / total if total else 0.0
-    return _Fit(coverage, missing, cost, min(bonus, MAX_EXPIRY_BONUS))
+    return _Fit(coverage, missing, cost, min(bonus, MAX_EXPIRY_BONUS), required_missing)
 
 
 class _Planner:
@@ -255,7 +263,7 @@ class _Planner:
         score += fit.expiry_bonus
 
         main = main_ingredient(recipe)
-        recent = [item for item in self.items if day - item.day <= 2]
+        recent = [item for item in self.items if abs(day - item.day) <= 2]
         recent_mains = {main_ingredient(self.recipes[item.recipe_id]) for item in recent}
         if main is not None and main in recent_mains:
             score -= SAME_MAIN_PENALTY
@@ -265,7 +273,7 @@ class _Planner:
             score -= REPEAT_PENALTY
         family = dish_family(recipe.title)
         if any(
-            day - item.day < FAMILY_WINDOW_DAYS and dish_family(item.title) == family
+            abs(day - item.day) < FAMILY_WINDOW_DAYS and dish_family(item.title) == family
             for item in self.items
         ):
             score -= SAME_FAMILY_PENALTY
@@ -290,13 +298,23 @@ class _Planner:
 
     def can_use(self, recipe: Recipe, day: int) -> bool:
         used = self.last_used.get(recipe.id)
-        return used is None or day - used >= REPEAT_GAP_DAYS
+        gap = STOCK_ONLY_REPEAT_GAP_DAYS if self.request.only_from_stock else REPEAT_GAP_DAYS
+        return used is None or abs(day - used) >= gap
 
-    def add(self, recipe: Recipe, day: int, meal: str, fit: _Fit) -> None:
+    def fits(self, recipe: Recipe, meal: str, day: int) -> bool:
+        return is_eligible(recipe, meal, self.request.only_from_stock) and self.can_use(recipe, day)
+
+    def affordable(self, fit: _Fit) -> bool:
+        if self.request.only_from_stock and fit.required_missing:
+            return False
+        budget = self.request.budget
+        return budget is None or self.spent + fit.cost <= budget
+
+    def add(self, recipe: Recipe, day: int, meal: str, fit: _Fit, consume: bool = True) -> None:
         servings = self.request.people
         factor = recipe.factor(servings)
         for line in recipe.lines:
-            if line.quantity is not None and line.name not in ALWAYS_AVAILABLE:
+            if consume and line.quantity is not None and line.name not in ALWAYS_AVAILABLE:
                 self.stock.take(
                     line.ingredient_id, to_grams(line.quantity * factor, line.unit, line.name)
                 )
@@ -329,12 +347,12 @@ class _Planner:
         best = None
         best_score = float("-inf")
         for recipe in self.allowed:
-            if not is_eligible(recipe, meal) or not self.can_use(recipe, day):
+            if not self.fits(recipe, meal, day):
                 continue
             fit = evaluate_fit(
                 recipe, recipe.factor(factor_people), self.stock, on_date, self.categories
             )
-            if self.request.budget is not None and self.spent + fit.cost > self.request.budget:
+            if not self.affordable(fit):
                 continue
             score = self.score(recipe, day, meal, fit, on_date)
             if score > best_score:
@@ -383,10 +401,11 @@ def generate_plan(
     warnings = []
     if empty:
         reason = "новых блюд" if request.mode == NEW_ONLY else "подходящих блюд"
-        warnings.append(
-            f"Не хватает {reason}: подобрано {total - empty} из {total}. "
-            "Ослабьте условия: время, технику, диету или бюджет."
-        )
+        hint = "Ослабьте условия: время, технику, диету или бюджет."
+        if request.only_from_stock:
+            reason = "блюд из ваших продуктов"
+            hint = "Добавьте продукты в инвентарь или разрешите докупку."
+        warnings.append(f"Не хватает {reason}: подобрано {total - empty} из {total}. {hint}")
     if pinned_queue:
         titles = ", ".join(recipe.title for recipe in pinned_queue)
         warnings.append(f"Не нашлось места для выбранных блюд: {titles}")
@@ -416,6 +435,63 @@ def build_plan(conn: sqlite3.Connection, request: PlanRequest, item_ids: set[int
         cooked_summary(conn),
         categories,
     )
+
+
+@dataclass
+class Replacement:
+    recipe_id: int
+    title: str
+    minutes: int | None
+    missing_lines: int
+    cost: float
+
+
+def find_replacements(
+    conn: sqlite3.Connection,
+    request: PlanRequest,
+    others: list[tuple[int, str, int, bool]],
+    day: int,
+    meal: str,
+    current_recipe_id: int,
+    limit: int = 5,
+) -> list[Replacement]:
+    """Лучшие замены блюда. others: остальные блюда плана (день, приём, рецепт, приготовлено).
+    Они уже заняли свои продукты, поэтому замена не отнимет запасы у соседних блюд."""
+    categories = {
+        row["id"]: row["category"] for row in conn.execute("SELECT id, category FROM ingredients")
+    }
+    recipes = load_recipes(conn)
+    planner = _Planner(
+        request, recipes, Stock.load(conn), cooked_recipe_ids(conn), cooked_summary(conn), categories
+    )
+    on_date = request.start + timedelta(days=day)
+    planner.stock.drop_expired(on_date)
+    for other_day, other_meal, recipe_id, is_cooked in others:
+        recipe = recipes.get(recipe_id)
+        if recipe is not None:
+            fit = evaluate_fit(
+                recipe, recipe.factor(request.people), planner.stock, on_date, categories
+            )
+            # Приготовленное уже списано из инвентаря: второй раз запас не расходуем
+            planner.add(recipe, other_day, other_meal, fit, consume=not is_cooked)
+
+    scored = []
+    for recipe in planner.allowed:
+        if recipe.id == current_recipe_id:
+            continue
+        if not planner.fits(recipe, meal, day):
+            continue
+        fit = evaluate_fit(
+            recipe, recipe.factor(request.people), planner.stock, on_date, categories
+        )
+        if not planner.affordable(fit):
+            continue
+        scored.append((planner.score(recipe, day, meal, fit, on_date), recipe, fit))
+    scored.sort(key=lambda entry: entry[0], reverse=True)
+    return [
+        Replacement(recipe.id, recipe.title, recipe.minutes, fit.missing_lines, round(fit.cost, 2))
+        for _, recipe, fit in scored[:limit]
+    ]
 
 
 def usage_report(plan: Plan) -> Counter:

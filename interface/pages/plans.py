@@ -3,8 +3,17 @@ from datetime import timedelta
 
 import streamlit as st
 
-from core.plan_manager import delete_plan, list_plans, meal_title
+from core.meal_planner import PlanRuleViolation
+from core.plan_manager import (
+    delete_plan,
+    list_plans,
+    meal_title,
+    replace_item,
+    replacements_for,
+)
 from interface.components.shared import flash, open_db, show_flash
+
+SWAP_KEY = "swap_item"
 
 show_flash()
 st.title("Мой рацион")
@@ -20,6 +29,33 @@ if not plans:
 
 def open_recipe(recipe_id: int) -> None:
     st.session_state["open_recipe"] = recipe_id
+
+
+def swap_options(plan, item) -> None:
+    with open_db() as conn:
+        options = replacements_for(conn, plan, item)
+    if not options:
+        st.caption("Подходящих замен нет: условия плана слишком узкие.")
+    for option in options:
+        time_text = f"{option.minutes} мин" if option.minutes else "время не указано"
+        buy = f"докупить {option.missing_lines}" if option.missing_lines else "всё есть дома"
+        if st.button(
+            f"{option.title} · {time_text} · {buy}",
+            key=f"swap_to_{item.id}_{option.recipe_id}",
+            width="stretch",
+        ):
+            try:
+                with open_db() as conn:
+                    replace_item(conn, plan, item, option.recipe_id)
+            except PlanRuleViolation as error:
+                st.error(str(error))
+            else:
+                st.session_state.pop(SWAP_KEY, None)
+                flash(f"Заменено на: {option.title}")
+                st.rerun()
+    if st.button("Отмена", key=f"swap_cancel_{item.id}", type="tertiary"):
+        st.session_state.pop(SWAP_KEY, None)
+        st.rerun()
 
 
 chosen = st.selectbox("План", plans, format_func=lambda plan: plan.name)
@@ -42,6 +78,10 @@ for day in range(chosen.days):
                 st.switch_page("interface/pages/recipes.py")
             if item.cooked_on:
                 status_column.caption("Приготовлено")
+            elif status_column.button("Заменить", key=f"swap_{item.id}"):
+                st.session_state[SWAP_KEY] = item.id
+            if st.session_state.get(SWAP_KEY) == item.id:
+                swap_options(chosen, item)
 
 if st.button("Удалить этот план"):
     with open_db() as conn:

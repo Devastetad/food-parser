@@ -1,16 +1,25 @@
 """Инвентарь продуктов: партии с количеством и сроком годности."""
 import math
+import re
 import sqlite3
 from dataclasses import dataclass
 from datetime import date, timedelta
 
-from core.ingredient_matcher import add_alias, find_ingredient, generic_ingredient_ids
-from core.units import INVENTORY_UNITS, convert
+from core.ingredient_matcher import (
+    add_alias,
+    find_ingredient,
+    generic_ingredient_ids,
+    is_nominative,
+    to_nominative,
+)
+from core.units import INVENTORY_UNITS, convert, to_grams
 from database.database import transaction
+from parser.normalizer import parse_ingredient
 
 MAX_NAME_LENGTH = 100
 EXPIRING_SOON_DAYS = 3
 _UNCHANGED = object()
+LIST_SEPARATOR_RE = re.compile(r"[;\n]+|,\s+")  # «1,5 кг» без пробела не разрывается
 
 
 class InventoryError(ValueError):
@@ -100,6 +109,36 @@ def add_item(
         "VALUES (?, ?, ?, ?, ?)",
         (name, ingredient_id, quantity, unit, _iso(expires_on)),
     ).lastrowid
+
+
+@dataclass
+class QuickItem:
+    name: str
+    quantity: float
+    unit: str
+
+
+def parse_quick_list(text: str) -> list[QuickItem]:
+    """Разбирает «молоко 1 л, яйца 10, лук 1 кг». Без количества считаем 1 шт."""
+    items = []
+    for part in LIST_SEPARATOR_RE.split(text or ""):
+        for parsed in parse_ingredient(part.strip(), bare_unit="шт") if part.strip() else []:
+            name = parsed.name if is_nominative(parsed.name) else to_nominative(parsed.name)
+            quantity, unit = parsed.quantity or 1.0, parsed.unit or "шт"
+            if unit not in INVENTORY_UNITS:
+                quantity, unit = to_grams(quantity, unit, name), "г"
+            if unit in ("г", "мл") and quantity >= 1000:  # нормализатор переводит кг в граммы
+                quantity, unit = quantity / 1000, "кг" if unit == "г" else "л"
+            items.append(QuickItem(name[:1].upper() + name[1:], quantity, unit))
+    return items
+
+
+def add_quick_items(conn: sqlite3.Connection, items: list[QuickItem]) -> int:
+    """Добавляет список целиком: при ошибке в одной строке не добавится ничего."""
+    with transaction(conn):
+        for item in items:
+            add_item(conn, item.name, item.quantity, item.unit)
+    return len(items)
 
 
 def get_item(conn: sqlite3.Connection, item_id: int) -> InventoryItem:
