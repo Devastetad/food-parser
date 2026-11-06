@@ -23,6 +23,7 @@ from parser.base_parser import (
 BASE_URL = "https://en.wikibooks.org/wiki/"
 TRANSLATED_FILE = config.SOURCES_DIR / "wikibooks_en_ru.jsonl"
 
+DANGLING_RE = re.compile(r"\s+(?:и|с|в|на|из|для|по|или)$", re.I)
 SUMMARY_RE = re.compile(r"\{\{\s*recipesummary", re.I)
 PARAM_NAMES = {
     "category": "Категория",
@@ -62,6 +63,14 @@ def to_extractor_markup(wikitext: str) -> str:
     return text
 
 
+def clear_title(title: str, page_title: str) -> str:
+    """Короткие названия переводчик часто портит («Пружина»): рядом показываем оригинал."""
+    title = DANGLING_RE.sub("", title)
+    if " " in title:
+        return title
+    return f"{title} ({page_title.removeprefix('Cookbook:')})"
+
+
 def page_url(title: str) -> str:
     return BASE_URL + quote(title.replace(" ", "_"), safe=":/")
 
@@ -93,6 +102,7 @@ class WikibooksEnSource(BaseSource):
             RawRecipe(
                 **{
                     **recipe,
+                    "title": clear_title(recipe["title"], item.title),
                     "ingredients": [IngredientLine(**line) for line in recipe["ingredients"]],
                 }
             )

@@ -28,7 +28,7 @@ from parser.sources.wikibooks_en import (  # noqa: E402
     to_extractor_markup,
 )
 
-WORKERS = 5
+WORKERS = 3
 MAX_LINES = 45  # длиннее обычно справочные страницы, а не рецепты
 RU_BASE_URL = "https://ru.wikibooks.org/wiki/"
 

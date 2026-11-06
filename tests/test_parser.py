@@ -875,3 +875,17 @@ def test_translated_recipe_is_marked_in_database(tmp_path, db_path):
     import_raw_recipes(db_path)
     with closing(connect(db_path)) as conn:
         assert "машинный перевод" in conn.execute("SELECT source FROM recipes").fetchone()[0]
+
+
+@pytest.mark.parametrize(
+    "title, page, expected",
+    [
+        ("Пружина", "Cookbook:Spring Rolls", "Пружина (Spring Rolls)"),
+        ("Хлеб и", "Cookbook:Saj Bread I", "Хлеб (Saj Bread I)"),
+        ("Луковый суп", "Cookbook:Onion Soup", "Луковый суп"),
+    ],
+)
+def test_doubtful_translated_title_keeps_original(title, page, expected):
+    from parser.sources.wikibooks_en import clear_title
+
+    assert clear_title(title, page) == expected
