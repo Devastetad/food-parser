@@ -7,6 +7,7 @@
 import json
 import re
 from collections.abc import Iterator
+from functools import cache
 from pathlib import Path
 from urllib.parse import quote
 
@@ -23,7 +24,8 @@ from parser.base_parser import (
 BASE_URL = "https://en.wikibooks.org/wiki/"
 TRANSLATED_FILE = config.SOURCES_DIR / "wikibooks_en_ru.jsonl"
 
-DANGLING_RE = re.compile(r"\s+(?:и|с|в|на|из|для|по|или)$", re.I)
+TITLE_FIXES_FILE = Path(__file__).with_name("wikibooks_en_titles.txt")
+ROMAN_RE = re.compile(r"\s(?:i|ii|iii|iv|v|vi)$")
 SUMMARY_RE = re.compile(r"\{\{\s*recipesummary", re.I)
 PARAM_NAMES = {
     "category": "Категория",
@@ -64,11 +66,15 @@ def to_extractor_markup(wikitext: str) -> str:
 
 
 def clear_title(title: str, page_title: str) -> str:
-    """Короткие названия переводчик часто портит («Пружина»): рядом показываем оригинал."""
-    title = DANGLING_RE.sub("", title)
-    if " " in title:
-        return title
-    return f"{title} ({page_title.removeprefix('Cookbook:')})"
+    """Название, проверенное вручную, важнее машинного перевода."""
+    page = page_title.removeprefix("Cookbook:")
+    return _title_fixes().get(page) or ROMAN_RE.sub(lambda match: match.group(0).upper(), title)
+
+
+@cache
+def _title_fixes() -> dict[str, str]:
+    lines = TITLE_FIXES_FILE.read_text(encoding="utf-8").splitlines()
+    return dict(line.split("|", 1) for line in lines)
 
 
 def page_url(title: str) -> str:

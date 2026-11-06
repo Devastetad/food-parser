@@ -880,12 +880,13 @@ def test_translated_recipe_is_marked_in_database(tmp_path, db_path):
 @pytest.mark.parametrize(
     "title, page, expected",
     [
-        ("Пружина", "Cookbook:Spring Rolls", "Пружина (Spring Rolls)"),
-        ("Хлеб и", "Cookbook:Saj Bread I", "Хлеб (Saj Bread I)"),
-        ("Луковый суп", "Cookbook:Onion Soup", "Луковый суп"),
+        ("Пружина", "Cookbook:Springerle", "Шпрингерле (анисовое печенье)"),
+        ("Хлеб и", "Cookbook:Saj Bread I", "Хлеб садж I"),
+        ("Луковый суп ii", "Cookbook:Нет такой страницы", "Луковый суп II"),
+        ("Луковый суп", "Cookbook:Нет такой страницы", "Луковый суп"),
     ],
 )
-def test_doubtful_translated_title_keeps_original(title, page, expected):
+def test_translated_title_uses_manual_fix(title, page, expected):
     from parser.sources.wikibooks_en import clear_title
 
     assert clear_title(title, page) == expected
