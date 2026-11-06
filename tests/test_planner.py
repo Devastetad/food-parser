@@ -1043,3 +1043,21 @@ def test_white_flour_at_home_covers_recipe_with_wheat_flour(tmp_path):
         add_item(conn, "Мука белая", 1000, "г")
         wheat = find_ingredient(conn, "Мука пшеничная")
         assert Stock.load(conn).available_grams(wheat) == 1000
+
+
+@pytest.mark.parametrize(
+    "title, is_preparation",
+    [
+        ("Соус бешамель", True),
+        ("Простое тесто для хлеба", True),
+        ("Сухая смесь специй", True),
+        ("Курица в сливочном соусе", False),
+        ("Фаршированный перец", False),
+        ("Яичница, политая маслом", False),
+        ("Грибной крем-суп", False),
+    ],
+)
+def test_only_preparations_are_not_meals(title, is_preparation):
+    from core.meal_planner import NOT_A_MEAL_RE
+
+    assert bool(NOT_A_MEAL_RE.search(title)) is is_preparation
