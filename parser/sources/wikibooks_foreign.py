@@ -197,7 +197,35 @@ def _make_source(code: str) -> type[WikibooksEnSource]:
         def __init__(self, path=None):
             super().__init__(path or translated_file(code))
 
+        def extract(self, item):
+            recipes = super().extract(item)
+            for recipe in recipes:
+                recipe.title = drop_unknown(recipe.title)
+                recipe.steps = [drop_unknown(step) for step in recipe.steps]
+                recipe.description = recipe.description and drop_unknown(recipe.description)
+                for line in recipe.ingredients:
+                    line.text = drop_unknown(line.text)
+                if DRINK_SECTION_RE.search(item.title):  # коктейли без раздела стали бы «блюдами»
+                    recipe.category = "Напитки"
+            return recipes
+
     return Source
 
 
-FOREIGN_SOURCES = {f"wikibooks_{code}": _make_source(code) for code in LANGUAGES}
+DRINK_SECTION_RE = re.compile(r"/(?:Boissons|Bevande|Bebidas|Getränke)/")
+UNKNOWN = "⁇"  # переводчик так помечает символ, которого не знает: кавычки, тире, дроби
+RANGE_RE = re.compile(rf"(\d)\s*{UNKNOWN}\s*(\d)")
+
+
+def drop_unknown(text: str) -> str:
+    if UNKNOWN not in text:
+        return text
+    text = RANGE_RE.sub(r"\1–\2", text)
+    return re.sub(r"\s+", " ", text.replace(UNKNOWN, " ")).strip()
+
+
+# Итальянский перевод портит продукты (рикотта, дрожжи, кабачки), поэтому в базу не идёт
+NOT_IMPORTED = {"it"}
+FOREIGN_SOURCES = {
+    f"wikibooks_{code}": _make_source(code) for code in LANGUAGES if code not in NOT_IMPORTED
+}

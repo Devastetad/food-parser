@@ -1,4 +1,7 @@
+Artes culinarias/Recetas/Albóndigas de bacalao de Alpuente
 Artes culinarias/Recetas/Arroz chaufa con langostinos
+Artes culinarias/Recetas/Arroz con habas y alcachofas
+Artes culinarias/Recetas/Arroz zambito
 Artes culinarias/Recetas/Bacalao a lo mio
 Artes culinarias/Recetas/Bacalao con tomate y pimiento estilo Luisa Pinazo
 Artes culinarias/Recetas/Bacalao guisado con patatas
@@ -14,6 +17,10 @@ Artes culinarias/Recetas/Botana de garbanzos, chile y limón
 Artes culinarias/Recetas/Brandada de Bacalao
 Artes culinarias/Recetas/Calabacín al microondas
 Artes culinarias/Recetas/Calabacín sabor pizza al microondas
+Artes culinarias/Recetas/Chanfaina
+Artes culinarias/Recetas/Cherele
+Artes culinarias/Recetas/Cocido de Lalín
+Artes culinarias/Recetas/Conejos (dulce)
 Artes culinarias/Recetas/Ensalada templada de bacalao con patata
 Artes culinarias/Recetas/Ensalada vinagreta de germinados de lentejas
 Artes culinarias/Recetas/Fideos guisados
@@ -22,19 +29,23 @@ Artes culinarias/Recetas/Fideuá de pollo y conejo
 Artes culinarias/Recetas/Fideuá del señorito
 Artes culinarias/Recetas/Fritada de asadura de ternasco
 Artes culinarias/Recetas/Fritada de calabacín
+Artes culinarias/Recetas/Garbanzos al microondas
 Artes culinarias/Recetas/Garbanzos con arroz en el microondas
 Artes culinarias/Recetas/Garbanzos dulces tostados
 Artes culinarias/Recetas/Guiso de garbanzos en olla GM
 Artes culinarias/Recetas/Habas cascás
 Artes culinarias/Recetas/Habas estofadas con jamón
 Artes culinarias/Recetas/Habas fritas
+Artes culinarias/Recetas/Habas tiernas
 Artes culinarias/Recetas/Habicholillas curadas al sol
 Artes culinarias/Recetas/Habicholillas esparragadas
 Artes culinarias/Recetas/Habichuelas con oreja
 Artes culinarias/Recetas/Habichuelas con perdiz
+Artes culinarias/Recetas/Hojaldre
 Artes culinarias/Recetas/Lentejas al estilo de Rosario Clemente
 Artes culinarias/Recetas/Lentejas al microondas
 Artes culinarias/Recetas/Lentejas ayerbenses
+Artes culinarias/Recetas/Lentejas con chorizo
 Artes culinarias/Recetas/Lentejas con panecillos
 Artes culinarias/Recetas/Lentejas de langar
 Artes culinarias/Recetas/Mejillones al vapor
@@ -44,14 +55,33 @@ Artes culinarias/Recetas/Merluza a la gallega
 Artes culinarias/Recetas/Merluza a la naranja en olla GM
 Artes culinarias/Recetas/Merluza a la sidra
 Artes culinarias/Recetas/Merluza mar y tierra
+Artes culinarias/Recetas/Pachamanca Huanuqueña
 Artes culinarias/Recetas/Paletilla de ternasco asada
+Artes culinarias/Recetas/Pastelitos de boniato de Isabel Alepuz
 Artes culinarias/Recetas/Patatas con arroz y bacalao
 Artes culinarias/Recetas/Patatas en ajopollo en olla GM
 Artes culinarias/Recetas/Pelotas de patata con bacalao
+Artes culinarias/Recetas/Pepián de cuy
+Artes culinarias/Recetas/Picarones
 Artes culinarias/Recetas/Piernas de cabrito a dos fuegos
 Artes culinarias/Recetas/Platos típicos de Alfarnate/Cazuela de habas
 Artes culinarias/Recetas/Platos típicos de Alfarnate/Potage de garbanzos y habichuelas
+Artes culinarias/Recetas/Puchero de Potries
+Artes culinarias/Recetas/Rondon
+Artes culinarias/Recetas/Sopaipillas pasadas
 Artes culinarias/Recetas/Suspiros veganos de garbanzo
 Artes culinarias/Recetas/Tortilla de bacalao
 Artes culinarias/Recetas/Tortilla de fideos
 Artes culinarias/Recetas/Verdinas con langostinos
+Livre de cuisine/Acras de rouget
+Livre de cuisine/Beurre d'escargot
+Livre de cuisine/Boissons/Cocktails/Blowjob
+Livre de cuisine/Boissons/Cocktails/Bossom caresser
+Livre de cuisine/Boissons/Cocktails/Cervelle de Singe
+Livre de cuisine/Boissons/Cocktails/Cris d’orgasmes
+Livre de cuisine/Boissons/Cocktails/Irish Car Bomb
+Livre de cuisine/Caldeirada
+Livre de cuisine/Cari tortue
+Livre de cuisine/Caïon
+Livre de cuisine/Cuisses de grenouilles à l'ail et au persil
+Livre de cuisine/Escargot de Bourgogne

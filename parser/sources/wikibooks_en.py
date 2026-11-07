@@ -34,6 +34,7 @@ EXCLUDED_PAGES = {
 }  # fmt: skip
 EXCLUDED_FILE = Path(__file__).with_name("wikibooks_excluded.txt")  # главный продукт переведён неверно
 TITLE_FIXES_FILE = Path(__file__).with_name("wikibooks_en_titles.txt")
+VARIANT_RE = re.compile(r"\(вариант \d+\)$")
 ROMAN_RE = re.compile(r"\s(?:i|ii|iii|iv|v|vi)$")
 SUMMARY_RE = re.compile(r"\{\{\s*recipesummary", re.I)
 PARAM_NAMES = {
@@ -74,10 +75,20 @@ def to_extractor_markup(wikitext: str) -> str:
     return text
 
 
-def clear_title(title: str, page_title: str) -> str:
-    """Название, проверенное вручную, важнее машинного перевода."""
+def clear_title(title: str, page_title: str, variant: bool = False) -> str:
+    """Название, проверенное вручную, важнее машинного перевода.
+
+    variant: на странице несколько рецептов, их различие после двоеточия сохраняется.
+    """
     page = page_title.removeprefix("Cookbook:")
-    return _title_fixes().get(page) or ROMAN_RE.sub(lambda match: match.group(0).upper(), title)
+    fixed = _title_fixes().get(page)
+    if not fixed:
+        return ROMAN_RE.sub(lambda match: match.group(0).upper(), title)
+    if variant and ": " in title:
+        return f"{fixed}: {title.split(': ', 1)[1]}"
+    if variant and (match := VARIANT_RE.search(title)):
+        return f"{fixed} {match.group(0)}"
+    return fixed
 
 
 @cache
@@ -122,7 +133,7 @@ class WikibooksEnSource(BaseSource):
             RawRecipe(
                 **{
                     **recipe,
-                    "title": clear_title(recipe["title"], item.title),
+                    "title": clear_title(recipe["title"], item.title, len(recipes) > 1),
                     "ingredients": [IngredientLine(**line) for line in recipe["ingredients"]],
                 }
             )

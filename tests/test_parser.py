@@ -969,7 +969,39 @@ def test_german_recipe_box_fills_fields():
 def test_foreign_sources_are_registered():
     from parser.sources import SOURCES
 
-    assert {"wikibooks_fr", "wikibooks_de", "wikibooks_it", "wikibooks_es"} <= set(SOURCES)
+    assert {"wikibooks_fr", "wikibooks_de", "wikibooks_es"} <= set(SOURCES)
+    assert "wikibooks_it" not in SOURCES  # перевод портит продукты
+
+
+def test_title_fix_keeps_variant_difference():
+    from parser.sources.wikibooks_en import clear_title
+
+    page = "Livre de cuisine/Moules marinières"
+    assert clear_title("Морские моллюски: основной рецепт", page, variant=True) == (
+        "Мидии по-матросски: основной рецепт"
+    )
+    assert clear_title("Морские моллюски (вариант 2)", page, variant=True) == "Мидии по-матросски (вариант 2)"
+    assert clear_title("Морские моллюски: основной рецепт", page) == "Мидии по-матросски"
+
+
+def test_unknown_symbols_are_dropped():
+    from parser.sources.wikibooks_foreign import drop_unknown
+
+    assert drop_unknown("250  ⁇  300 г каштанов") == "250–300 г каштанов"
+    assert drop_unknown("дно  ⁇  пирога  ⁇ ") == "дно пирога"
+    assert drop_unknown("2 яйца") == "2 яйца"
+
+
+def test_drinks_section_becomes_drinks():
+    from parser.base_parser import SourceItem
+    from parser.sources.wikibooks_foreign import FOREIGN_SOURCES
+
+    recipe = {"title": "Мартини", "source_url": "u", "ingredients": [{"text": "20 мл вермута", "group": None}],
+              "steps": ["Смешать."]}
+    line = json.dumps({"id": 1, "revision": 1, "title": "Livre de cuisine/Boissons/Cocktails/Martini",
+                       "recipes": [recipe]}, ensure_ascii=False)
+    item = SourceItem(1, 1, "Livre de cuisine/Boissons/Cocktails/Martini", line)
+    assert FOREIGN_SOURCES["wikibooks_fr"]().extract(item)[0].category == "Напитки"
 
 
 @pytest.mark.parametrize(
