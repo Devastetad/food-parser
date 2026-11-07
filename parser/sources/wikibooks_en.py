@@ -1,6 +1,6 @@
 """Английская Кулинарная книга Викиучебника, лицензия CC BY-SA 4.0, машинный перевод.
 
-Перевод делает scripts/translate_wikibooks_en.py один раз: он долгий и требует отдельного
+Перевод делает scripts/translate_wikibooks.py один раз: он долгий и требует отдельного
 окружения с Argos Translate. Этот источник только читает готовый файл, поэтому сбор
 рецептов не зависит от переводчика.
 """
@@ -32,6 +32,7 @@ EXCLUDED_PAGES = {
     "Cookbook:Roast Iguana with Birria Marinade", "Cookbook:Shark Fin Soup",
     "Cookbook:Space Cake", "Cookbook:Spicy Placenta with Rice Noodles",
 }  # fmt: skip
+EXCLUDED_FILE = Path(__file__).with_name("wikibooks_excluded.txt")  # главный продукт переведён неверно
 TITLE_FIXES_FILE = Path(__file__).with_name("wikibooks_en_titles.txt")
 ROMAN_RE = re.compile(r"\s(?:i|ii|iii|iv|v|vi)$")
 SUMMARY_RE = re.compile(r"\{\{\s*recipesummary", re.I)
@@ -80,6 +81,11 @@ def clear_title(title: str, page_title: str) -> str:
 
 
 @cache
+def _excluded_file() -> set[str]:
+    return set(EXCLUDED_FILE.read_text(encoding="utf-8").splitlines())
+
+
+@cache
 def _title_fixes() -> dict[str, str]:
     lines = TITLE_FIXES_FILE.read_text(encoding="utf-8").splitlines()
     return dict(line.split("|", 1) for line in lines)
@@ -99,7 +105,7 @@ class WikibooksEnSource(BaseSource):
     def prepare(self) -> None:
         if not self.path.exists():
             raise SourceUnavailable(
-                f"Нет файла с переводом {self.path.name}: запустите scripts/translate_wikibooks_en.py"
+                f"Нет файла с переводом {self.path.name}: запустите scripts/translate_wikibooks.py"
             )
 
     def iter_items(self) -> Iterator[SourceItem]:
@@ -110,7 +116,7 @@ class WikibooksEnSource(BaseSource):
 
     def extract(self, item: SourceItem) -> list[RawRecipe]:
         recipes = json.loads(item.content)["recipes"]
-        if not recipes or item.title in EXCLUDED_PAGES:
+        if not recipes or item.title in EXCLUDED_PAGES or item.title in _excluded_file():
             raise NoRecipeFound("Нет разделов состава и приготовления")
         return [
             RawRecipe(

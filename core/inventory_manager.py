@@ -105,9 +105,9 @@ def add_item(
         )
         return existing["id"]
     return conn.execute(
-        "INSERT INTO inventory (name, ingredient_id, quantity, unit, expires_on) "
-        "VALUES (?, ?, ?, ?, ?)",
-        (name, ingredient_id, quantity, unit, _iso(expires_on)),
+        "INSERT INTO inventory (name, ingredient_id, quantity, unit, expires_on, added_on) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (name, ingredient_id, quantity, unit, _iso(expires_on), date.today().isoformat()),
     ).lastrowid
 
 

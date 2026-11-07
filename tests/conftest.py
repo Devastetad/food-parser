@@ -1,3 +1,4 @@
+import pandas  # noqa: F401  первая загрузка из потока AppTest изредка падает на полпути
 from contextlib import closing
 
 import pytest

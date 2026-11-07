@@ -900,3 +900,90 @@ def test_excluded_page_is_rejected(tmp_path, db_path):
     path.write_text(json.dumps(page, ensure_ascii=False) + "\n", encoding="utf-8")
 
     assert run_source(WikibooksEnSource(path), db_path).rejected == 1
+
+
+# --- Викиучебники на других языках ---
+
+
+@pytest.mark.parametrize(
+    "code, page, ingredients, steps, servings",
+    [
+        (
+            "fr",
+            "== Ingrédients ==\n''(Pour 4 parts environ)''\n* 6 décilitres de {{i|lait}}\n"
+            "* {{i|'=oui|huile}} végétale\n== Préparation au micro-onde ==\n* Faire bouillir\n"
+            "== Variantes ==\n* Autre\n",
+            ["6 décilitres de lait", "huile végétale"],
+            ["Faire bouillir"],
+            "4",
+        ),
+        (
+            "de",
+            "<noinclude>{{:Kochbuch/ Navigationsleiste/ Ebenen}}</noinclude>\n"
+            "=== Zutaten für 2 Personen ===\n* 500 g Rosenkohl\n=== Zubereitung ===\n* Putzen\n",
+            ["500 g Rosenkohl"],
+            ["Putzen"],
+            "2",
+        ),
+        (
+            "it",
+            "==Ingredienti==\nper 4 persone\n\n* 500 g di zucchero\n==Preparazione==\n#Far bollire\n",
+            ["500 g di zucchero"],
+            ["Far bollire"],
+            "4",
+        ),
+        (
+            "es",
+            "{{Artes culinarias/Datos de receta\n|comensales = 6\n|tiempo = 60 minutos\n"
+            "|ingredientes =\n* 3 {{ing|clavo de olor|Clavos de olor}}\n"
+            "|procedimiento =\n# Se coge un bol\n}}\n",
+            ["3 Clavos de olor"],
+            ["Se coge un bol"],
+            "6",
+        ),
+    ],
+)
+def test_foreign_markup_goes_through_same_extractor(code, page, ingredients, steps, servings):
+    from parser.sources.wikibooks_foreign import LANGUAGES, to_extractor_markup
+
+    [recipe] = extract_recipes("Блюдо", to_extractor_markup(LANGUAGES[code], page))
+    assert texts(recipe) == ingredients
+    assert recipe.steps == steps
+    assert recipe.servings_text == servings
+
+
+def test_german_recipe_box_fills_fields():
+    from parser.sources.wikibooks_foreign import LANGUAGES, to_extractor_markup
+
+    page = (
+        "{{:Kochbuch/_Vorlage/_RezeptBox\n|Portionen = 4 Personen\n|Zubereitungszeit = ca. 20 min\n"
+        "|Schwierigkeitsgrad = 1\n}}\n[[Datei:Pesto.jpg|miniatur]]\n"
+        "== Zutaten ==\n* 1 Bund Bärlauch\n== Zubereitung ==\n* Hacken\n"
+    )
+    [recipe] = extract_recipes("Pesto", to_extractor_markup(LANGUAGES["de"], page))
+    assert recipe.servings_text == "4 Personen"
+    assert recipe.time_text == "ca. 20 min"
+    assert recipe.image_url.endswith("/Pesto.jpg")
+
+
+def test_foreign_sources_are_registered():
+    from parser.sources import SOURCES
+
+    assert {"wikibooks_fr", "wikibooks_de", "wikibooks_it", "wikibooks_es"} <= set(SOURCES)
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [("6 cl de vodka", "60 ml de vodka"), ("0,5 dl lait", "50 ml lait"), ("2 clous", "2 clous")],
+)
+def test_centilitres_become_millilitres_before_translation(text, expected):
+    from parser.sources.wikibooks_foreign import normalize_units
+
+    assert normalize_units(text) == expected
+
+
+def test_nested_foreign_page_uses_dish_name():
+    from parser.sources.wikibooks_foreign import LANGUAGES, page_name
+
+    title = "Livre de cuisine/Boissons/Cocktails/Mojito"
+    assert page_name(LANGUAGES["fr"], title) == "Mojito"

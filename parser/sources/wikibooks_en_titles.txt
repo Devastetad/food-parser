@@ -36,6 +36,454 @@ Apple and Almond Cake|Яблочно-миндальный торт
 Apple with Mustard and Goat Cheese|Яблоко с горчицей и козьим сыром
 Apple-Pear Crumble|Яблочно-грушевый крамбл
 Applewood Bacon|Бекон, копчённый на яблоне
+Artes culinarias/Recetas/Aceitunas Arrugás Guardeñas|Вяленые оливки по-гуарденьски
+Artes culinarias/Recetas/Aceitunas aliñadas a la ciezana|Маринованные оливки по-сьесански
+Artes culinarias/Recetas/Aguajina|Агуахина
+Artes culinarias/Recetas/Aguardiente de pepino|Огуречная настойка
+Artes culinarias/Recetas/Ajetao|Ахетао (чесночное блюдо)
+Artes culinarias/Recetas/Ajo|Чесночная подлива
+Artes culinarias/Recetas/Ajoaceite|Чесночный соус ахоасейте
+Artes culinarias/Recetas/Ajopuchero|Ахопучеро (чесночная похлёбка)
+Artes culinarias/Recetas/Ají pereirano|Острый соус ахи по-перейрански
+Artes culinarias/Recetas/Alcachofas revueltas con jamón.|Артишоки с яйцом и ветчиной
+Artes culinarias/Recetas/Alcauciles/Arcanciles en caldo|Артишоки в бульоне
+Artes culinarias/Recetas/Alcauciles/Arcanciles revueltos con huevo y jamón|Артишоки с яйцом и ветчиной по-андалусски
+Artes culinarias/Recetas/Almejas a la marinera|Моллюски по-морскому
+Artes culinarias/Recetas/Almendras Garapiñadas|Миндаль в карамели
+Artes culinarias/Recetas/Amatriciana|Паста аматричана
+Artes culinarias/Recetas/Anchoas artesanas|Домашние анчоусы
+Artes culinarias/Recetas/Anticucho|Антикучо (шашлычки)
+Artes culinarias/Recetas/Arco iris glacial|Десерт «Ледяная радуга»
+Artes culinarias/Recetas/Arepa de choclo|Кукурузная арепа
+Artes culinarias/Recetas/Arequipe paisa|Молочная карамель арекипе
+Artes culinarias/Recetas/Arreglos frutales|Фруктовая нарезка
+Artes culinarias/Recetas/Arroz al vino 2|Рис с вином 2
+Artes culinarias/Recetas/Arroz blanco al microondas|Белый рис в микроволновке
+Artes culinarias/Recetas/Arroz chaufa con langostinos|Рис чауфа с креветками
+Artes culinarias/Recetas/Arroz chaufa con pato asado|Рис чауфа с жареной уткой
+Artes culinarias/Recetas/Arroz con collejas|Рис со смолёвкой
+Artes culinarias/Recetas/Arroz con costra|Рис с корочкой
+Artes culinarias/Recetas/Arroz con leche|Рисовая каша на молоке
+Artes culinarias/Recetas/Arroz con leche al microondas|Рисовая каша на молоке в микроволновке
+Artes culinarias/Recetas/Arroz con leche en olla GM|Рисовая каша на молоке в мультиварке
+Artes culinarias/Recetas/Arroz con pollo sencillo|Простой рис с курицей
+Artes culinarias/Recetas/Arroz de cebada con leche|Перловая каша на молоке
+Artes culinarias/Recetas/Asadurillas al vino con ajillos|Потроха в вине с чесноком
+Artes culinarias/Recetas/Atol de elote|Атоле из кукурузы
+Artes culinarias/Recetas/Atol de plátano|Атоле из бананов
+Artes culinarias/Recetas/Babá (bizcocho borracho)|Ромовая баба
+Artes culinarias/Recetas/Bacalao a lo mio|Треска по-домашнему
+Artes culinarias/Recetas/Bacalao con tomate y pimiento estilo Luisa Pinazo|Треска с помидорами и перцем
+Artes culinarias/Recetas/Bacalao guisado con patatas|Треска, тушённая с картофелем
+Artes culinarias/Recetas/Bacalao hervido|Отварная треска
+Artes culinarias/Recetas/Bacalao meneao|Треска менеао
+Artes culinarias/Recetas/Batido de fresas y plátano|Клубнично-банановый коктейль
+Artes culinarias/Recetas/Bebida de chía|Напиток с чиа
+Artes culinarias/Recetas/Berberechos al vapor en microondas|Сердцевидки на пару в микроволновке
+Artes culinarias/Recetas/Berenjenas al horno menorquinas|Запечённые баклажаны по-менорски
+Artes culinarias/Recetas/Berenjenas al microondas|Баклажаны в микроволновке
+Artes culinarias/Recetas/Berenjenas aliñadas|Маринованные баклажаны
+Artes culinarias/Recetas/Berenjenas mareadas|Баклажаны с пряностями
+Artes culinarias/Recetas/Berenjenas rellenas|Фаршированные баклажаны
+Artes culinarias/Recetas/Besos de dama|Печенье «Поцелуи дамы»
+Artes culinarias/Recetas/Bienmesabe|Десерт бьенмесабе
+Artes culinarias/Recetas/Bisaltos|Сахарный горох
+Artes culinarias/Recetas/Bizcocho 1 2 3|Бисквит «1-2-3»
+Artes culinarias/Recetas/Bizcocho cuatro cuartos|Бисквит «Четыре четверти»
+Artes culinarias/Recetas/Bizcocho de almendras|Миндальный бисквит
+Artes culinarias/Recetas/Bizcocho de calabaza|Тыквенный бисквит
+Artes culinarias/Recetas/Bizcocho de claras de huevo|Бисквит на белках
+Artes culinarias/Recetas/Bizcocho de leche y aceite|Бисквит на молоке и масле
+Artes culinarias/Recetas/Bizcocho de limón|Лимонный бисквит
+Artes culinarias/Recetas/Bizcocho de limón en olla GM|Лимонный бисквит в мультиварке
+Artes culinarias/Recetas/Bizcocho de nata|Сливочный бисквит
+Artes culinarias/Recetas/Bizcocho de plátano|Банановый бисквит
+Artes culinarias/Recetas/Bizcocho de yogurt|Йогуртовый бисквит
+Artes culinarias/Recetas/Bizcocho esponjoso|Пышный бисквит
+Artes culinarias/Recetas/Bizcocho genovesa|Генуэзский бисквит
+Artes culinarias/Recetas/Bizcocho integral de yogur|Цельнозерновой йогуртовый бисквит
+Artes culinarias/Recetas/Bizcochá manchega|Бисквит по-ламанчски
+Artes culinarias/Recetas/Boios|Бойос
+Artes culinarias/Recetas/Bollo Maimón|Бисквит Маймон
+Artes culinarias/Recetas/Boniato al microondas|Батат в микроволновке
+Artes culinarias/Recetas/Boquerones en caldillo de escabeche|Анчоусы в маринаде эскабече
+Artes culinarias/Recetas/Boquerones en vinagre|Анчоусы в уксусе
+Artes culinarias/Recetas/Botana de garbanzos, chile y limón|Закуска из нута с чили и лимоном
+Artes culinarias/Recetas/Bourbon Slush|Ледяной коктейль с бурбоном
+Artes culinarias/Recetas/Brandada de Bacalao|Брандада из трески
+Artes culinarias/Recetas/Bróquil|Брокколи по-валенсийски
+Artes culinarias/Recetas/Buñuelos de María Vicenta|Пончики Марии Висенты
+Artes culinarias/Recetas/Cabezas de cordero al horno|Запечённые бараньи головы
+Artes culinarias/Recetas/Cabrito asado a la barreña|Запечённый козлёнок по-баррейски
+Artes culinarias/Recetas/Calabacín al microondas|Цукини в микроволновке
+Artes culinarias/Recetas/Calabacín sabor pizza al microondas|Цукини со вкусом пиццы в микроволновке
+Artes culinarias/Recetas/Caldillo de pollo andaluz|Куриный бульон по-андалусски
+Artes culinarias/Recetas/Caldo moreno|Тёмный бульон
+Artes culinarias/Recetas/Caldo tlalpeño|Суп тлальпеньо
+Artes culinarias/Recetas/Canario (Perú)|Коктейль «Канарио»
+Artes culinarias/Recetas/Capitán (Perú)|Коктейль «Капитан»
+Artes culinarias/Recetas/Caracoles asados|Жареные улитки
+Artes culinarias/Recetas/Caracoles con mojete|Улитки в соусе
+Artes culinarias/Recetas/Caracoles con tomate|Улитки с помидорами
+Artes culinarias/Recetas/Carajito|Карахито (кофе с ромом)
+Artes culinarias/Recetas/Caramelo líquido en el microondas|Жидкая карамель в микроволновке
+Artes culinarias/Recetas/Caramelos de piquillo|Карамель из перца пикильо
+Artes culinarias/Recetas/Cardos fritos|Жареный кардон
+Artes culinarias/Recetas/Chancho asado con tamarindo|Жареная свинина с тамариндом
+Artes culinarias/Recetas/Chanclas poblanas|Чанклас по-пуэблански
+Artes culinarias/Recetas/Chapaleles|Чапалелес
+Artes culinarias/Recetas/Chilacayote en dulce|Сладкая фиголистная тыква
+Artes culinarias/Recetas/Chilcano|Чилкано
+Artes culinarias/Recetas/Chilcano de pisco|Коктейль чилкано с писко
+Artes culinarias/Recetas/Chilcano de pisco (Perú)|Коктейль чилкано с писко (Перу)
+Artes culinarias/Recetas/Chipá Porteño|Чипа по-портеньо
+Artes culinarias/Recetas/Chojín|Чохин (салат с редисом)
+Artes culinarias/Recetas/Chorizo al infierno|Чоризо в огне
+Artes culinarias/Recetas/Chorizos en aceite|Чоризо в масле
+Artes culinarias/Recetas/Chorizos y patatas a las cenizas|Чоризо с картофелем в золе
+Artes culinarias/Recetas/Choto frito|Жареный козлёнок
+Artes culinarias/Recetas/Choux|Заварное тесто
+Artes culinarias/Recetas/Chuletas en naranja|Отбивные в апельсине
+Artes culinarias/Recetas/Coca de llanda de Isabel Herrero|Сладкий пирог кока де льянда
+Artes culinarias/Recetas/Cocho|Кочо
+Artes culinarias/Recetas/Cocido|Косидо (испанское мясное рагу)
+Artes culinarias/Recetas/Cocido Boyacense|Косидо по-бояка
+Artes culinarias/Recetas/Cocido de María Vicenta|Косидо Марии Висенты
+Artes culinarias/Recetas/Cocido mareado|Косидо с пряностями
+Artes culinarias/Recetas/Col confitada|Капуста конфи
+Artes culinarias/Recetas/Colegial|Коктейль «Школьник»
+Artes culinarias/Recetas/Conejo a la tournaisienne|Кролик по-турнейски
+Artes culinarias/Recetas/Conejo guisado con patatas|Кролик, тушённый с картофелем
+Artes culinarias/Recetas/Confitura de mango|Джем из манго
+Artes culinarias/Recetas/Congretes|Конгретес
+Artes culinarias/Recetas/Coulis de frambuesas|Малиновый кули
+Artes culinarias/Recetas/Crema de atún|Паста из тунца
+Artes culinarias/Recetas/Crema de calabaza y setas al microondas|Крем-суп из тыквы и грибов в микроволновке
+Artes culinarias/Recetas/Crema de caramelo|Карамельный крем
+Artes culinarias/Recetas/Crema de fríjoles|Фасолевый крем-суп
+Artes culinarias/Recetas/Crema de limón|Лимонный крем
+Artes culinarias/Recetas/Crema de mantequilla|Масляный крем
+Artes culinarias/Recetas/Crema de piña|Ананасовый крем
+Artes culinarias/Recetas/Creps|Блинчики
+Artes culinarias/Recetas/Culeca|Кулека
+Artes culinarias/Recetas/Cuscús en olla GM|Кускус в мультиварке
+Artes culinarias/Recetas/Cuy en salsa de maní|Морская свинка в арахисовом соусе
+Artes culinarias/Recetas/Dorada a la sal al microondas|Дорада в соли в микроволновке
+Artes culinarias/Recetas/Dulce de cebada pelada|Сладкая перловка
+Artes culinarias/Recetas/Dulce de leche|Дульсе де лече
+Artes culinarias/Recetas/Ejotes envueltos en huevo|Стручковая фасоль в яйце
+Artes culinarias/Recetas/Empanada de triguero|Эмпанада со спаржей
+Artes culinarias/Recetas/Ensalada de Ayerbe|Салат по-айербски
+Artes culinarias/Recetas/Ensalada de coditos|Салат с рожками
+Artes culinarias/Recetas/Ensalada de patata con atun y cangrejo|Картофельный салат с тунцом и крабом
+Artes culinarias/Recetas/Ensalada de tomates nevados|Салат «Снежные помидоры»
+Artes culinarias/Recetas/Ensalada templada de bacalao con patata|Тёплый салат с треской и картофелем
+Artes culinarias/Recetas/Ensalada vinagreta de germinados de lentejas|Салат с проростками чечевицы
+Artes culinarias/Recetas/Ensaladilla de pimientos morrones|Салат со сладким перцем
+Artes culinarias/Recetas/Envinado para pastel|Винная пропитка для торта
+Artes culinarias/Recetas/Escaldón|Эскальдон
+Artes culinarias/Recetas/Escalivada al microondas|Эскаливада в микроволновке
+Artes culinarias/Recetas/Escalopes de avena|Овсяные эскалопы
+Artes culinarias/Recetas/Espaguettis express|Быстрые спагетти
+Artes culinarias/Recetas/Espárragos con salsa de piquillo|Спаржа в соусе из перца пикильо
+Artes culinarias/Recetas/Fabada al microondas|Фабада в микроволновке
+Artes culinarias/Recetas/Fabada asturiana (en olla a presión)|Астурийская фабада в скороварке
+Artes culinarias/Recetas/Fainá|Фаина (лепёшка из нута)
+Artes culinarias/Recetas/Fajitas con pollo|Фахитас с курицей
+Artes culinarias/Recetas/Farfalaj|Фарфалах
+Artes culinarias/Recetas/Fideos guisados|Тушёная вермишель
+Artes culinarias/Recetas/Fideuá de ajos tiernos y esparragos|Фидеуа с молодым чесноком и спаржей
+Artes culinarias/Recetas/Fideuá de pollo y conejo|Фидеуа с курицей и кроликом
+Artes culinarias/Recetas/Fideuá del señorito|Фидеуа по-господски
+Artes culinarias/Recetas/Filete de pollo a la sartén con verduras|Куриное филе на сковороде с овощами
+Artes culinarias/Recetas/Flamenquines|Фламенкинес (мясные рулетики)
+Artes culinarias/Recetas/Flan con galletas y caramelo|Флан с печеньем и карамелью
+Artes culinarias/Recetas/Flan de galletas al microondas|Флан с печеньем в микроволновке
+Artes culinarias/Recetas/Flan de queso|Сырный флан
+Artes culinarias/Recetas/Frangollo|Франголло (кукурузный десерт)
+Artes culinarias/Recetas/Fricase de ave a la antigua|Фрикасе из птицы по-старинному
+Artes culinarias/Recetas/Frijoles negros refritos|Жареная чёрная фасоль
+Artes culinarias/Recetas/Frita de tomate|Жареные помидоры
+Artes culinarias/Recetas/Fritada de asadura de ternasco|Жареные потроха ягнёнка
+Artes culinarias/Recetas/Fritada de calabacín|Жареные цукини
+Artes culinarias/Recetas/Fríjoles antioqueños|Фасоль по-антьокски
+Artes culinarias/Recetas/Gachas al estilo María Inés Hernández|Гачас по рецепту Марии Инес Эрнандес
+Artes culinarias/Recetas/Gachas anisadas|Сладкая каша гачас с анисом
+Artes culinarias/Recetas/Gachas serranas|Горная каша гачас
+Artes culinarias/Recetas/Galettes|Галеты
+Artes culinarias/Recetas/Garbanzos con arroz en el microondas|Нут с рисом в микроволновке
+Artes culinarias/Recetas/Garbanzos dulces tostados|Сладкий жареный нут
+Artes culinarias/Recetas/Gazpacho de la huerta|Огородный гаспачо
+Artes culinarias/Recetas/Gazpacho de pastor|Пастуший гаспачо
+Artes culinarias/Recetas/Gazpacho manchego|Гаспачо по-ламанчски
+Artes culinarias/Recetas/Gazpachos de Alpuente|Гаспачо по-альпуэнтски
+Artes culinarias/Recetas/Golfeado|Гольфеадо (венесуэльские булочки)
+Artes culinarias/Recetas/Gominolas|Мармеладные конфеты
+Artes culinarias/Recetas/Granadina|Гренадин
+Artes culinarias/Recetas/Guacamol guatemalteco|Гватемальский гуакамоле
+Artes culinarias/Recetas/Guatita|Гуатита (рубец в арахисовом соусе)
+Artes culinarias/Recetas/Guefilte Fish|Фаршированная рыба
+Artes culinarias/Recetas/Guiso de garbanzos en olla GM|Рагу из нута в мультиварке
+Artes culinarias/Recetas/Guiñapos|Гиньяпос
+Artes culinarias/Recetas/Habas cascás|Жареные бобы в стручках
+Artes culinarias/Recetas/Habas estofadas con jamón|Бобы, тушённые с ветчиной
+Artes culinarias/Recetas/Habas fritas|Жареные бобы
+Artes culinarias/Recetas/Habas secas (michirones) en olla rápida con chorizo y jamón|Мичиронес (сушёные бобы с чоризо и ветчиной)
+Artes culinarias/Recetas/Habicholillas curadas al sol|Стручковая фасоль, вяленная на солнце
+Artes culinarias/Recetas/Habicholillas esparragadas|Стручковая фасоль по-спаржевому
+Artes culinarias/Recetas/Habichuelas con oreja|Фасоль со свиным ухом
+Artes culinarias/Recetas/Habichuelas con perdiz|Фасоль с куропаткой
+Artes culinarias/Recetas/Helado de invierno|Зимнее мороженое
+Artes culinarias/Recetas/Higadete|Жареная печень
+Artes culinarias/Recetas/Hostias de comunión|Вафли для причастия
+Artes culinarias/Recetas/Huevos guisados|Яйца в соусе
+Artes culinarias/Recetas/Huevos rellenos|Фаршированные яйца
+Artes culinarias/Recetas/Huevos revueltos con cebolla|Болтунья с луком
+Artes culinarias/Recetas/Hummus|Хумус
+Artes culinarias/Recetas/Hígado encebollado|Печень с луком
+Artes culinarias/Recetas/Iguaxte|Игуаште
+Artes culinarias/Recetas/Juan Sabroso|Хуан Сабросо
+Artes culinarias/Recetas/Judías tiernas al vapor en olla GM|Стручковая фасоль на пару в мультиварке
+Artes culinarias/Recetas/Jurel con Cebolla|Ставрида с луком
+Artes culinarias/Recetas/Jute de papa|Картофельное блюдо хуте
+Artes culinarias/Recetas/Kaq ik|Как ик (гватемальский суп с индейкой)
+Artes culinarias/Recetas/Köttbullar|Шведские фрикадельки
+Artes culinarias/Recetas/Langosta cocida|Отварной лангуст
+Artes culinarias/Recetas/Leicaj de miel|Медовый пирог лейках
+Artes culinarias/Recetas/Lentejas al estilo de Rosario Clemente|Чечевица по рецепту Росарио Клементе
+Artes culinarias/Recetas/Lentejas al microondas|Чечевица в микроволновке
+Artes culinarias/Recetas/Lentejas ayerbenses|Чечевица по-айербски
+Artes culinarias/Recetas/Lentejas con panecillos|Чечевица с булочками
+Artes culinarias/Recetas/Lentejas de langar|Лангар дал из чечевицы
+Artes culinarias/Recetas/Letrías (postre portugués)|Летриас (португальский десерт)
+Artes culinarias/Recetas/Lomo de cerdo acaramelado|Свиная корейка в карамели
+Artes culinarias/Recetas/Lomo de cerdo en escabeche|Свиная корейка в маринаде эскабече
+Artes culinarias/Recetas/Macarrones con carne picada|Макароны с фаршем
+Artes culinarias/Recetas/Macarrones con queso en taza al microondas|Макароны с сыром в кружке в микроволновке
+Artes culinarias/Recetas/Macarrones gratinados al microondas con tomate y huevo|Макароны с помидором и яйцом в микроволновке
+Artes culinarias/Recetas/Macerado de coca (Perú)|Настойка на коке (Перу)
+Artes culinarias/Recetas/Magdalenas|Кексы магдалены
+Artes culinarias/Recetas/Magdalenas de Isabel|Кексы магдалены от Исабель
+Artes culinarias/Recetas/Mango deshidratado|Сушёное манго
+Artes culinarias/Recetas/Mantecados|Песочное печенье мантекадос
+Artes culinarias/Recetas/Mantecados de Alpuente|Песочное печенье мантекадос по-альпуэнтски
+Artes culinarias/Recetas/Marmita en olla GM|Мармита в мультиварке
+Artes culinarias/Recetas/Matambre manchego|Матамбре по-ламанчски
+Artes culinarias/Recetas/Mate Tereré|Холодный мате терере
+Artes culinarias/Recetas/Mayonesa casera|Домашний майонез
+Artes culinarias/Recetas/Mayonesa española|Испанский майонез
+Artes culinarias/Recetas/Mazamorra antioqueña|Масаморра по-антьокски
+Artes culinarias/Recetas/Mazorca de maíz al microondas|Початок кукурузы в микроволновке
+Artes culinarias/Recetas/Mechada Italiana|Говядина по-итальянски
+Artes culinarias/Recetas/Mejillones al vapor|Мидии на пару
+Artes culinarias/Recetas/Mella de papas|Картофельное блюдо мелья
+Artes culinarias/Recetas/Melocotones a la mañica|Персики по-арагонски
+Artes culinarias/Recetas/Melocotones al estilo de Cariñena|Персики по-кариньенски
+Artes culinarias/Recetas/Melón al oporto|Дыня с портвейном
+Artes culinarias/Recetas/Membrillo de Matilde|Айвовый мармелад Матильды
+Artes culinarias/Recetas/Membrillos cocidos|Варёная айва
+Artes culinarias/Recetas/Menudos y patas de cordero|Бараньи потроха и ножки
+Artes culinarias/Recetas/Merengue al microondas|Безе в микроволновке
+Artes culinarias/Recetas/Merengue suizo|Швейцарская меренга
+Artes culinarias/Recetas/Merenguitos|Маленькие безе
+Artes culinarias/Recetas/Merluza a la gallega|Хек по-галисийски
+Artes culinarias/Recetas/Merluza a la naranja en olla GM|Хек с апельсином в мультиварке
+Artes culinarias/Recetas/Merluza a la sidra|Хек в сидре
+Artes culinarias/Recetas/Merluza mar y tierra|Хек «Море и земля»
+Artes culinarias/Recetas/Mermelada|Домашний джем
+Artes culinarias/Recetas/Mermelada de albaricoques/Coques|Абрикосовый джем
+Artes culinarias/Recetas/Mermelada de cebolla|Луковый мармелад
+Artes culinarias/Recetas/Mermelada de zanahoria|Морковный мармелад
+Artes culinarias/Recetas/Michirones|Мичиронес (сушёные бобы)
+Artes culinarias/Recetas/Migas|Мигас (жареные хлебные крошки)
+Artes culinarias/Recetas/Migas a la pastora|Мигас по-пастушьи
+Artes culinarias/Recetas/Migas al estilo María Cebellán|Мигас по рецепту Марии Себельян
+Artes culinarias/Recetas/Migas con melón|Мигас с дыней
+Artes culinarias/Recetas/Migas con setas populares|Мигас с грибами
+Artes culinarias/Recetas/Migas de harina|Мигас из муки
+Artes culinarias/Recetas/Migas de niño|Детские мигас
+Artes culinarias/Recetas/Migas del pastor|Пастушьи мигас
+Artes culinarias/Recetas/Moje|Мохе (овощной салат)
+Artes culinarias/Recetas/Morros a la vizcaína|Свиные пятачки по-бискайски
+Artes culinarias/Recetas/Mostachón|Мостачон (бисквитное печенье)
+Artes culinarias/Recetas/Mostachón de Utrera|Мостачон из Утреры
+Artes culinarias/Recetas/Mousaka|Мусака
+Artes culinarias/Recetas/Mouse de cilantro|Мусс из кинзы
+Artes culinarias/Recetas/Mulos de pollo al microondas|Куриные бёдра в микроволновке
+Artes culinarias/Recetas/Naranjada|Апельсиновый напиток
+Artes culinarias/Recetas/Naranjada aguardientera|Апельсиновый напиток с настойкой
+Artes culinarias/Recetas/Naranjada con Vodka|Апельсиновый напиток с водкой
+Artes culinarias/Recetas/Naranjada tropical|Тропический апельсиновый напиток
+Artes culinarias/Recetas/Natilla|Заварной крем натилья
+Artes culinarias/Recetas/Navegado|Глинтвейн навегадо
+Artes culinarias/Recetas/Negroni Sbagliato|Коктейль негрони сбальято
+Artes culinarias/Recetas/Olla de Alpuente|Рагу по-альпуэнтски
+Artes culinarias/Recetas/Orelletes|Хрустящее печенье орельетес
+Artes culinarias/Recetas/Orelletes de Alpuente|Хрустящее печенье орельетес по-альпуэнтски
+Artes culinarias/Recetas/Paletilla de ternasco asada|Запечённая лопатка ягнёнка
+Artes culinarias/Recetas/Palomitas al microondas|Попкорн в микроволновке
+Artes culinarias/Recetas/Pan de higo|Инжирный хлеб
+Artes culinarias/Recetas/Pan de yuca|Хлеб из маниоки
+Artes culinarias/Recetas/Pan en olla GM|Хлеб в мультиварке
+Artes culinarias/Recetas/Panaceite|Хлеб с маслом
+Artes culinarias/Recetas/Panacota|Панна котта
+Artes culinarias/Recetas/Panderos|Печенье пандерос
+Artes culinarias/Recetas/Panuchos|Панучос (мексиканские лепёшки)
+Artes culinarias/Recetas/Papas a la huancaína|Картофель по-уанкайски
+Artes culinarias/Recetas/Papas bravas|Острый картофель
+Artes culinarias/Recetas/Papas en paseo|Картофель пасео
+Artes culinarias/Recetas/Papelón con Limón|Лимонад с тростниковым сахаром
+Artes culinarias/Recetas/Pasta brisa 2|Песочное тесто 2
+Artes culinarias/Recetas/Pasta de almendras|Миндальная паста
+Artes culinarias/Recetas/Pastel de carne murciano|Мясной пирог по-мурсийски
+Artes culinarias/Recetas/Patacón|Патакон (жареный плантан)
+Artes culinarias/Recetas/Patas de cerdo en salsa de almendras|Свиные ножки в миндальном соусе
+Artes culinarias/Recetas/Patatas a la carbonara|Картофель карбонара
+Artes culinarias/Recetas/Patatas chips al microondas|Картофельные чипсы в микроволновке
+Artes culinarias/Recetas/Patatas chulas|Картофель чулас
+Artes culinarias/Recetas/Patatas con arroz y bacalao|Картофель с рисом и треской
+Artes culinarias/Recetas/Patatas en ajopollo en olla GM|Картофель в чесночном соусе в мультиварке
+Artes culinarias/Recetas/Patatas fritas al horno sin aceite|Картофель фри в духовке без масла
+Artes culinarias/Recetas/Patatas tostadas con col de gorrino|Жареный картофель с капустой
+Artes culinarias/Recetas/Patitas a la vinagreta|Свиные ножки в винегрете
+Artes culinarias/Recetas/Paté de alcaparras y aceitunas verdes|Паста из каперсов и зелёных оливок
+Artes culinarias/Recetas/Pebre|Соус пебре
+Artes culinarias/Recetas/Pelotas de patata con bacalao|Картофельные шарики с треской
+Artes culinarias/Recetas/Pelotas del puchero de Potries|Мясные шарики из пучеро
+Artes culinarias/Recetas/Pencas de acelga con bechamel|Черешки мангольда с бешамелем
+Artes culinarias/Recetas/Peras al vino|Груши в вине
+Artes culinarias/Recetas/Pericana de Alicante|Перикана по-аликантски
+Artes culinarias/Recetas/Peruano Flip|Коктейль «Перуанский флип»
+Artes culinarias/Recetas/Peruano Flip (Perú)|Коктейль «Перуанский флип» (Перу)
+Artes culinarias/Recetas/Perú libre|Коктейль «Свободное Перу»
+Artes culinarias/Recetas/Perú libre (Perú)|Коктейль «Свободное Перу» (Перу)
+Artes culinarias/Recetas/Pescado guisado con mensí|Рыба, тушённая с менси
+Artes culinarias/Recetas/Picante de suero|Острая сыворотка
+Artes culinarias/Recetas/Picatostes borrachos|Пьяные гренки
+Artes culinarias/Recetas/Pico de gallo|Сальса пико де гальо
+Artes culinarias/Recetas/Piernas de cabrito a dos fuegos|Ножки козлёнка на двух огнях
+Artes culinarias/Recetas/Pimientos asados con vinagreta de comino|Жареный перец с винегретом из кумина
+Artes culinarias/Recetas/Pimientos rellenos|Фаршированный перец
+Artes culinarias/Recetas/Pinchos morunos diversos|Мавританские шашлычки
+Artes culinarias/Recetas/Pipirrana guardeña|Пипиррана по-гуарденьски
+Artes culinarias/Recetas/Pisco Collins (Perú)|Коктейль «Писко Коллинз» (Перу)
+Artes culinarias/Recetas/Pisco tonic (Perú)|Писко с тоником (Перу)
+Artes culinarias/Recetas/Piskiri de maracuyá (Perú)|Коктейль из маракуйи (Перу)
+Artes culinarias/Recetas/Pisto manchego|Писто по-ламанчски
+Artes culinarias/Recetas/Pizza diavola|Пицца дьявола
+Artes culinarias/Recetas/Plato agridulce|Кисло-сладкое блюдо
+Artes culinarias/Recetas/Platos típicos de Alfarnate/Ajo blanco|Ахобланко (холодный чесночный суп)
+Artes culinarias/Recetas/Platos típicos de Alfarnate/Cazuela de habas|Рагу из бобов
+Artes culinarias/Recetas/Platos típicos de Alfarnate/Cazuela de papaveotes|Рагу с папавеотес
+Artes culinarias/Recetas/Platos típicos de Alfarnate/Horchata de almendras|Миндальная орчата
+Artes culinarias/Recetas/Platos típicos de Alfarnate/Lomo en manteca|Свиная корейка в смальце
+Artes culinarias/Recetas/Platos típicos de Alfarnate/Migas|Мигас по-альфарнатски
+Artes culinarias/Recetas/Platos típicos de Alfarnate/Morrete|Морете
+Artes culinarias/Recetas/Platos típicos de Alfarnate/Potage de garbanzos y habichuelas|Потаж из нута и фасоли
+Artes culinarias/Recetas/Platos típicos de Alfarnate/Zoque|Соке (холодный суп)
+Artes culinarias/Recetas/Pollo al Lois|Курица по Лоису
+Artes culinarias/Recetas/Pollo al chilindrón|Курица чилиндрон
+Artes culinarias/Recetas/Pollo arvejado|Курица с горошком
+Artes culinarias/Recetas/Pollo con salsa tausí|Курица в соусе таузи
+Artes culinarias/Recetas/Pollo en jocón|Курица хокон
+Artes culinarias/Recetas/Polvorones de naranja|Апельсиновые польворонес
+Artes culinarias/Recetas/Ponche de melocotón|Персиковый пунш
+Artes culinarias/Recetas/Potaje|Потаж (овощное рагу)
+Artes culinarias/Recetas/Primavera (Perú)|Коктейль «Весна» (Перу)
+Artes culinarias/Recetas/Provoletas|Жареный сыр провола
+Artes culinarias/Recetas/Pulpo a la gallega|Осьминог по-галисийски
+Artes culinarias/Recetas/Quesadilla salvadoreña|Сальвадорская кесадилья
+Artes culinarias/Recetas/Quesadillas|Кесадильи
+Artes culinarias/Recetas/Rabo de toro|Бычий хвост
+Artes culinarias/Recetas/Rape guisado|Тушёный морской чёрт
+Artes culinarias/Recetas/Refresco con sabor a vainilla|Ванильная газировка
+Artes culinarias/Recetas/Refresco de extracto|Газировка из экстракта
+Artes culinarias/Recetas/Refresco de jengibre|Имбирная газировка
+Artes culinarias/Recetas/Refresco de tuna|Напиток из опунции
+Artes culinarias/Recetas/Regañás|Хрустящие лепёшки реганьяс
+Artes culinarias/Recetas/Relleno de crema de durazno|Персиковая кремовая начинка
+Artes culinarias/Recetas/Relleno de crema de nuez|Ореховая кремовая начинка
+Artes culinarias/Recetas/Relleno para empanadilla|Начинка для эмпанадильи
+Artes culinarias/Recetas/Revolcado de menudos|Потроха с яйцом
+Artes culinarias/Recetas/Revuelto de collejas|Болтунья со смолёвкой
+Artes culinarias/Recetas/Revuelto de pimientos|Болтунья с перцем
+Artes culinarias/Recetas/Rice and beans|Рис с фасолью
+Artes culinarias/Recetas/Risotto|Ризотто
+Artes culinarias/Recetas/Risotto de verduras al microondas|Овощное ризотто в микроволновке
+Artes culinarias/Recetas/Risotto porteño|Ризотто по-портеньо
+Artes culinarias/Recetas/Rissoto en olla GM|Ризотто в мультиварке
+Artes culinarias/Recetas/Rollo de carne|Мясной рулет
+Artes culinarias/Recetas/Rollos de anís de Josefina|Анисовые рулетики Хосефины
+Artes culinarias/Recetas/Rollos mal hechos|Неаккуратные рулетики
+Artes culinarias/Recetas/Rosegones de Alpuente|Миндальное печенье росегонес
+Artes culinarias/Recetas/Salinas power|Коктейль «Салинас»
+Artes culinarias/Recetas/Salsa alioli fácil|Простой соус алиоли
+Artes culinarias/Recetas/Salsa bearnesa|Соус беарнез
+Artes culinarias/Recetas/Salsa de albaricoques|Абрикосовый соус
+Artes culinarias/Recetas/Salsa de cebolla y tomate al curry en microondas|Соус из лука и томатов с карри в микроволновке
+Artes culinarias/Recetas/Salsa de tomate invertida|Томатный соус наоборот
+Artes culinarias/Recetas/Salsa mayonesa|Майонез
+Artes culinarias/Recetas/Salsa sabayón|Соус сабайон
+Artes culinarias/Recetas/Salsa tártara|Соус тартар
+Artes culinarias/Recetas/Salsa vinagreta a la mostaza|Горчичный винегрет
+Artes culinarias/Recetas/Sango lojano|Санго по-лохански
+Artes culinarias/Recetas/Sangría|Сангрия
+Artes culinarias/Recetas/Sardinas encebolladas|Сардины с луком
+Artes culinarias/Recetas/Seitán a la naranja|Сейтан с апельсином
+Artes culinarias/Recetas/Shukos|Шукос (гватемальский хот-дог)
+Artes culinarias/Recetas/Sloppy joes|Сэндвичи слоппи джо
+Artes culinarias/Recetas/Sol y sombra (Perú)|Коктейль «Солнце и тень» (Перу)
+Artes culinarias/Recetas/Soldaditos de Pavía|Солдатики из Павии (жареная треска)
+Artes culinarias/Recetas/Sopa de ajo de Luisa Pinazo|Чесночный суп Луисы Пинасо
+Artes culinarias/Recetas/Sopa de ajos|Чесночный суп
+Artes culinarias/Recetas/Sopa de espárragos trigueros|Суп из дикой спаржи
+Artes culinarias/Recetas/Sopa de pasta y pastilla en el microondas|Суп с макаронами в микроволновке
+Artes culinarias/Recetas/Sopa fuchifu con pollo|Суп фучифу с курицей
+Artes culinarias/Recetas/Sopa juliana|Суп жюльен
+Artes culinarias/Recetas/Sopas de pan|Хлебный суп
+Artes culinarias/Recetas/Sopas del cocido con hierbabuena|Суп из косидо с мятой
+Artes culinarias/Recetas/Sopas hervidas|Отварной суп
+Artes culinarias/Recetas/Sopetas de Ayerbe|Сопетас по-айербски
+Artes culinarias/Recetas/Sprizz|Коктейль шприц
+Artes culinarias/Recetas/Submarino|Горячее молоко с шоколадом субмарино
+Artes culinarias/Recetas/Suspiros veganos de garbanzo|Веганское безе из нута
+Artes culinarias/Recetas/Taboulé|Табуле
+Artes culinarias/Recetas/Tacacho con cecina|Такачо с вяленым мясом
+Artes culinarias/Recetas/Tallarín saltado sam si|Жареная лапша по-перуански
+Artes culinarias/Recetas/Tamal antioqueño|Тамал по-антьокски
+Artes culinarias/Recetas/Tarta de Chocolata para microondas|Шоколадный торт в микроволновке
+Artes culinarias/Recetas/Tarta de chocolate|Шоколадный торт
+Artes culinarias/Recetas/Tarta de chocolate blanco y frambuesas|Торт с белым шоколадом и малиной
+Artes culinarias/Recetas/Tarta de margarina|Пирог на маргарине
+Artes culinarias/Recetas/Tarta de queso al horno|Запечённый чизкейк
+Artes culinarias/Recetas/Tatin de puerros|Татен с луком-пореем
+Artes culinarias/Recetas/Ternasco asado|Запечённый ягнёнок
+Artes culinarias/Recetas/Ternera a la Llanera|Говядина по-льянерски
+Artes culinarias/Recetas/Ternera con salsa de piñones y pasas|Говядина в соусе с кедровыми орехами и изюмом
+Artes culinarias/Recetas/Terremoto|Коктейль «Землетрясение»
+Artes culinarias/Recetas/Tinginys|Тингинис (литовский шоколадный десерт)
+Artes culinarias/Recetas/Tinto de verano|Тинто де верано (вино с газировкой)
+Artes culinarias/Recetas/Tocino de cielo|Десерт «Небесное сало»
+Artes culinarias/Recetas/Tomate frito con sangre|Жареные помидоры с кровью
+Artes culinarias/Recetas/Tomaticán Cuyano|Томатикан по-куйянски
+Artes culinarias/Recetas/Torrijas de vino y miel|Торрихас с вином и мёдом
+Artes culinarias/Recetas/Torta del lunes de Quasimodo|Пирог понедельника Квазимодо
+Artes culinarias/Recetas/Tortas de azúcar de Alpuente|Сахарные лепёшки по-альпуэнтски
+Artes culinarias/Recetas/Tortellini a la crema|Тортеллини в сливках
+Artes culinarias/Recetas/Tortilla de acelgas o espinacas al microondas|Тортилья с мангольдом или шпинатом в микроволновке
+Artes culinarias/Recetas/Tortilla de bacalao|Омлет с треской
+Artes culinarias/Recetas/Tortilla de fideos|Омлет с вермишелью
+Artes culinarias/Recetas/Tortilla de verduras|Омлет с овощами
+Artes culinarias/Recetas/Tortilla francesa con queso|Омлет с сыром по-французски
+Artes culinarias/Recetas/Turrón de chocolate|Шоколадный туррон
+Artes culinarias/Recetas/Tzic de venado|Цик из оленины
+Artes culinarias/Recetas/Urta a la roteña|Рыба урта по-ротски
+Artes culinarias/Recetas/Uvas en aguardiente|Виноград в настойке
+Artes culinarias/Recetas/Valdiviano|Вальдивиано (чилийский суп)
+Artes culinarias/Recetas/Vampiro (bebida)|Коктейль «Вампир»
+Artes culinarias/Recetas/Veloute|Соус велюте
+Artes culinarias/Recetas/Verdinas con langostinos|Фасоль вердинас с креветками
+Artes culinarias/Recetas/Zarangollo|Сарангольо (цукини с яйцом)
 Artichoke Dip with Parmesan|Соус-дип из артишоков с пармезаном
 Asa iwa|Аса ива
 Ashwe Soup|Суп Ашве
