@@ -416,3 +416,25 @@ class AccountStore:
             "WHERE user_id = ? ORDER BY created_at DESC",
             (user_id,), "all",
         )  # fmt: skip
+
+
+def explain_store_error(error: Exception) -> str:
+    """Понятная причина, почему хранилище не открылось. Секреты в текст не попадают."""
+    text = str(error)
+    lowered = text.lower()
+    if isinstance(error, ValueError) and "ipv6" in lowered:
+        return (
+            "Строка DATABASE_URL не разбирается. Проверьте, что [YOUR-PASSWORD] заменён паролем "
+            "без квадратных скобок, а в пароле нет символов @ : / # ?"
+        )
+    if isinstance(error, ValueError):
+        return "DATABASE_URL должен начинаться с postgresql:// (строка Session pooler из Supabase)"
+    if "28p01" in lowered or "password authentication failed" in lowered:
+        return "Supabase не принял пароль базы. Вставьте в строку пароль базы данных проекта или сбросьте его"
+    if "tenant or user not found" in lowered:
+        return "Supabase не нашёл пользователя. В строке Session pooler имя должно быть вида postgres.<id проекта>"
+    if "getaddrinfo" in lowered or "name or service not known" in lowered or "nodename" in lowered:
+        return "Сервер базы не найден. Проверьте адрес после @: он должен оканчиваться на pooler.supabase.com"
+    if "timed out" in lowered or "unreachable" in lowered or "timeout" in lowered:
+        return "Сервер базы не отвечает. Нужна строка Session pooler, Direct с Streamlit Cloud не работает"
+    return f"Ошибка подключения к базе: {type(error).__name__}"

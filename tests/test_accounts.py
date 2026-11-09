@@ -350,3 +350,21 @@ def test_owner_gets_old_data_only_with_confirmed_email_when_mail_is_on(monkeypat
     monkeypatch.setattr(auth, "mailer", lambda: object())
     assert not auth._import_old_data(None, owner)
     assert auth._import_old_data(None, accounts.User(owner.id, owner.email, "free", None, verified=True))
+
+
+@pytest.mark.parametrize(
+    "error, hint",
+    [
+        (ValueError("Invalid IPv6 URL"), "квадратных скобок"),
+        (ValueError("DATABASE_URL должен начинаться"), "postgresql://"),
+        (Exception({"C": "28P01", "M": "password authentication failed for user"}), "пароль"),
+        (Exception({"C": "XX000", "M": "Tenant or user not found"}), "postgres.<id проекта>"),
+        (OSError("[Errno -2] Name or service not known"), "pooler.supabase.com"),
+        (TimeoutError("timed out"), "Session pooler"),
+        (RuntimeError("secret-password-123"), "RuntimeError"),
+    ],
+)
+def test_store_errors_are_explained_without_secrets(error, hint):
+    text = accounts.explain_store_error(error)
+    assert hint in text
+    assert "secret-password-123" not in text

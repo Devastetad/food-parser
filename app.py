@@ -9,6 +9,7 @@ import config
 from core.cloud_sync import CloudSync, SyncError
 from database.database import BackupError, SchemaTooNewError, init_db
 from database.migrations import MIGRATIONS
+from core.accounts import explain_store_error
 from core.logging_setup import get_logger, setup_logging
 from interface.components.auth import accounts_enabled, current_user, login_page, save_user_data, store
 from interface.components.shared import SYNC_KEY, open_db, read_secret
@@ -64,9 +65,10 @@ def start_accounts() -> None:
     """Без входа страницы приложения не показываются."""
     try:
         store()
-    except Exception:
+    except Exception as error:
         log.exception("Хранилище аккаунтов недоступно")
         st.error("Сервис входа временно недоступен. Обновите страницу через минуту.")
+        st.caption(f"Для владельца сайта: {explain_store_error(error)}")
         st.stop()
     if current_user() is None:
         login_page()
