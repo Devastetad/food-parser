@@ -30,8 +30,11 @@ from parser.sources.wikibooks_en import (  # noqa: E402
     page_url,
     to_extractor_markup,
 )
+from parser.sources.recipes_wiki import page_url as wiki_page_url  # noqa: E402
+from parser.sources.recipes_wiki import translated_file as wiki_translated_file  # noqa: E402
 from parser.sources.wikibooks_foreign import (  # noqa: E402
     LANGUAGES,
+    Language,
     normalize_units,
     page_name,
     translated_file,
@@ -84,6 +87,8 @@ AFTER = [
 FRACTION_RE = re.compile(r"(?:(\d+)[  -]+)?(\d+)\s*[⁄/]\s*(\d+)")
 VULGAR = {"½": "1/2", "¼": "1/4", "¾": "3/4", "⅓": "1/3", "⅔": "2/3", "⅛": "1/8"}
 LATIN_RE = re.compile(r"[A-Za-z]{3,}")
+# Английский через NLLB: те же правки до перевода, что и для Argos
+ENGLISH = Language("en", "eng_Latn", "", "", "", "", tuple(BEFORE))
 BEFORE = [(re.compile(pattern, re.I), value) for pattern, value in BEFORE]
 AFTER = [(re.compile(pattern, re.I), value) for pattern, value in AFTER]
 
@@ -96,6 +101,7 @@ _translator = None
 _nllb = None
 _spm = None
 _language = None
+_wiki = False  # Recipes Wiki вместо Викиучебника
 _cache: dict[str, str] = {}
 
 
@@ -103,15 +109,16 @@ class NumbersChanged(Exception):
     """Перевод потерял число: рецепт с неверным количеством или временем хуже, чем никакой."""
 
 
-def _start_worker(code: str, lock) -> None:
-    global _translator, _nllb, _spm, _language
+def _start_worker(code: str, lock, engine: str = "argos", wiki: bool = False) -> None:
+    global _translator, _nllb, _spm, _language, _wiki
     os.environ.setdefault("OMP_NUM_THREADS", "2")
-    if code != "en":
+    _wiki = wiki
+    if code != "en" or engine == "nllb":
         import ctranslate2
         import sentencepiece
 
         model = Path(os.environ["NLLB_MODEL"])
-        _language = LANGUAGES[code]
+        _language = LANGUAGES[code] if code != "en" else ENGLISH
         _spm = sentencepiece.SentencePieceProcessor(model_file=str(model / "sentencepiece.bpe.model"))
         _nllb = ctranslate2.Translator(str(model), device="cpu", compute_type="int8", intra_threads=NLLB_THREADS)
         return
@@ -198,7 +205,9 @@ def translate(text: str | None, lower: bool = False) -> str | None:
 
 def translate_page(page: dict) -> str:
     """Возвращает строку JSONL. Страница без рецепта тоже записывается, чтобы не разбирать снова."""
-    if _language:
+    if _wiki:
+        name, markup, url = page["title"], to_extractor_markup(page["text"]), wiki_page_url(page["title"])
+    elif _language:
         name = page_name(_language, page["title"])
         markup = foreign_markup(_language, page["text"])
         url = foreign_page_url(_language, page["title"])
@@ -241,9 +250,11 @@ def _translate_recipe(recipe, name: str, url: str) -> dict | None:
         return None  # название не перевелось: по такому блюду не понять, что это
     data["title"] = title[:1].upper() + title[1:] + suffix
     data["source_url"] = recipe.source_url.replace(ru_page_url(name), url)
-    if data["image_url"]:
+    if data["image_url"] and _wiki:
+        data["image_url"] = None  # картинки Fandom отдаются с другого адреса, ссылка была бы битой
+    elif data["image_url"]:
         data["image_url"] = data["image_url"].replace(
-            RU_BASE_URL, _language.base_url if _language else BASE_URL
+            RU_BASE_URL, _language.base_url if _language and _language.code != "en" else BASE_URL
         )
     for key in ("description", "category", "cuisine", "time_text", "calories_text"):
         data[key] = translate(data[key])
@@ -281,28 +292,50 @@ def read_pages(dump: Path, done: set[str], code: str):
             element.clear()
 
 
+WIKI_INGREDIENTS_RE = re.compile(r"^=+\s*'*ingredients?", re.I | re.M)
+
+
+def read_wiki_pages(path: Path, done: set[str]):
+    """Страницы Recipes Wiki из scripts/fetch_recipes_wiki.py: только с разделом состава."""
+    with path.open(encoding="utf-8") as file:
+        for line in file:
+            page = json.loads(line)
+            page["id"] = str(page["id"])
+            if page["id"] not in done and WIKI_INGREDIENTS_RE.search(page["text"]):
+                yield page
+
+
 def main() -> None:
     arguments = argparse.ArgumentParser()
     arguments.add_argument("dump", type=Path)
     arguments.add_argument("--lang", choices=["en", *LANGUAGES], default="en")
     arguments.add_argument("--limit", type=int)
+    arguments.add_argument("--source", choices=["wikibooks", "recipes_wiki"], default="wikibooks")
+    arguments.add_argument("--engine", choices=["argos", "nllb"], default="argos", help="для английского")
+    arguments.add_argument("--target", type=Path, help="куда писать, по умолчанию файл источника")
     options = arguments.parse_args()
+    wiki = options.source == "recipes_wiki"
 
-    target = TRANSLATED_FILE if options.lang == "en" else translated_file(options.lang)
+    if wiki:
+        target = wiki_translated_file()
+    else:
+        target = TRANSLATED_FILE if options.lang == "en" else translated_file(options.lang)
+    target = options.target or target
     target.parent.mkdir(parents=True, exist_ok=True)
     done = set()
     if target.exists():
         with target.open(encoding="utf-8") as file:
-            done = {json.loads(line)["id"] for line in file}
+            done = {str(json.loads(line)["id"]) for line in file}
+    found = read_wiki_pages(options.dump, done) if wiki else read_pages(options.dump, done, options.lang)
     # Короткие страницы первыми: простые блюда нужнее всего и будут готовы раньше
-    pages = sorted(read_pages(options.dump, done, options.lang), key=lambda page: len(page["text"]))
+    pages = sorted(found, key=lambda page: len(page["text"]))
     pages = pages[: options.limit]
     print(f"Готово {len(done)}, осталось {len(pages)}", flush=True)
 
     with (
         multiprocessing.Manager() as manager,
         multiprocessing.Pool(
-            WORKERS, initializer=_start_worker, initargs=(options.lang, manager.Lock())
+            WORKERS, initializer=_start_worker, initargs=(options.lang, manager.Lock(), options.engine, wiki)
         ) as pool,
         target.open("a", encoding="utf-8") as output,
     ):

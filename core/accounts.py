@@ -200,7 +200,10 @@ def _execute(conn, sql: str, params, fetch: str | None):
     cursor = conn.cursor()
     try:
         cursor.execute(sql, params)
-        result = cursor.fetchone() if fetch == "one" else cursor.fetchall() if fetch == "all" else None
+        if fetch == "columns":
+            result = [column[0] for column in cursor.description]
+        else:
+            result = cursor.fetchone() if fetch == "one" else cursor.fetchall() if fetch == "all" else None
         conn.commit()
     except Exception as error:
         if not _connection_lost(error):
@@ -273,6 +276,58 @@ class AccountStore:
                         raise
                     log.info("Соединение с хранилищем оборвалось, подключаюсь заново")
                     self._drop_connection()
+
+    # --- Общие запросы для других хранилищ на той же базе (рецепты) ---
+
+    @property
+    def is_postgres(self) -> bool:
+        return self._pg is not None
+
+    def execute(self, sql: str, params=()) -> None:
+        self._run(sql, params)
+
+    def query_one(self, sql: str, params=()):
+        return self._run(sql, params, "one")
+
+    def query_all(self, sql: str, params=()) -> list:
+        return [tuple(row) for row in self._run(sql, params, "all")]
+
+    def column_names(self, sql: str) -> list[str]:
+        return self._run(sql, (), "columns")
+
+    def transaction(self, work) -> None:
+        """work(cursor) выполняется одной транзакцией. В SQL пишется ?, как везде."""
+        mark = self._mark
+
+        class Cursor:
+            def __init__(self, cursor):
+                self._cursor = cursor
+
+            def execute(self, sql, params=()):
+                return self._cursor.execute(sql.replace("?", mark), params)
+
+        def run(conn) -> None:
+            cursor = conn.cursor()
+            try:
+                work(Cursor(cursor))
+                conn.commit()
+            except Exception:
+                conn.rollback()
+                raise
+
+        if self._pg is None:
+            with closing(self._connect()) as conn:
+                run(conn)
+            return
+        with self._lock:
+            if self._conn is None:
+                self._conn = self._connect()
+            try:
+                run(self._conn)
+            except Exception as error:
+                if _connection_lost(error):
+                    self._drop_connection()
+                raise
 
     def _drop_connection(self) -> None:
         try:

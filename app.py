@@ -11,6 +11,7 @@ from database.database import BackupError, SchemaTooNewError, init_db
 from database.migrations import MIGRATIONS
 from core.accounts import explain_store_error
 from core.logging_setup import get_logger, setup_logging
+from core.recipe_base import download, remote_version
 from interface.components.auth import accounts_enabled, current_user, login_page, save_user_data, store
 from interface.components.shared import SYNC_KEY, open_db, read_secret
 
@@ -61,6 +62,31 @@ def connect_cloud(token: str, repository: str, seed: str) -> CloudSync:
     return sync
 
 
+@st.cache_resource(ttl=600, show_spinner="Загружаю базу рецептов…")
+def recipe_base_file(url: str):
+    """Рецепты из Postgres в файл сервера. Версия проверяется раз в 10 минут, качается только новая."""
+    version = remote_version(store())
+    if version is None:
+        return None
+    target = config.DATA_DIR / "recipe_base.db"
+    marker = target.with_name(target.name + ".version")
+    if not (target.exists() and marker.exists() and marker.read_text(encoding="utf-8") == version):
+        download(store(), target, version)
+        marker.write_text(version, encoding="utf-8")
+    return target
+
+
+def use_recipe_base() -> None:
+    """База рецептов из хранилища важнее файла seed.db, он остаётся запасным."""
+    try:
+        path = recipe_base_file(read_secret("DATABASE_URL"))
+    except Exception:
+        log.exception("База рецептов из хранилища не загрузилась, беру seed.db")
+        return
+    if path is not None:
+        config.SEED_DB = path
+
+
 def start_accounts() -> None:
     """Без входа страницы приложения не показываются."""
     try:
@@ -70,6 +96,7 @@ def start_accounts() -> None:
         st.error("Сервис входа временно недоступен. Обновите страницу через минуту.")
         st.caption(f"Для владельца сайта: {explain_store_error(error)}")
         st.stop()
+    use_recipe_base()
     if current_user() is None:
         login_page()
         st.stop()
