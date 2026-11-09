@@ -111,6 +111,10 @@ CODE_ATTEMPTS = 5
 CODE_RESEND_PAUSE = timedelta(seconds=60)
 
 
+WRONG_SCHEME = "DATABASE_URL должен начинаться с postgresql:// или sqlite:///"
+BROKEN_URL = "DATABASE_URL обрезан"
+
+
 class AccountError(Exception):
     """Текст показывается пользователю как есть."""
 
@@ -188,10 +192,16 @@ class AccountStore:
             self._mark = "?"
             self._pg = None
         elif parsed.scheme in ("postgres", "postgresql"):
+            try:
+                parsed.port
+            except ValueError:
+                raise ValueError(BROKEN_URL) from None
+            if not (parsed.hostname and parsed.username and parsed.password):
+                raise ValueError(BROKEN_URL)
             self._pg = parsed
             self._mark = "%s"
         else:
-            raise ValueError("DATABASE_URL должен начинаться с postgresql:// или sqlite:///")
+            raise ValueError(WRONG_SCHEME)
 
     def _connect(self):
         if self._pg is None:
@@ -427,8 +437,16 @@ def explain_store_error(error: Exception) -> str:
             "Строка DATABASE_URL не разбирается. Проверьте, что [YOUR-PASSWORD] заменён паролем "
             "без квадратных скобок, а в пароле нет символов @ : / # ?"
         )
+    if isinstance(error, ValueError) and text == BROKEN_URL:
+        return (
+            "Строка DATABASE_URL обрывается: в пароле, скорее всего, есть символ # ? / или пробел. "
+            "Сбросьте пароль базы в Supabase, сгенерируйте новый из букв и цифр и вставьте его в строку"
+        )
     if isinstance(error, ValueError):
-        return "DATABASE_URL должен начинаться с postgresql:// (строка Session pooler из Supabase)"
+        return (
+            "DATABASE_URL должен начинаться с postgresql:// (строка Session pooler из Supabase). "
+            "Проверьте, что значение в кавычках и перед ним нет лишних символов"
+        )
     if "28p01" in lowered or "password authentication failed" in lowered:
         return "Supabase не принял пароль базы. Вставьте в строку пароль базы данных проекта или сбросьте его"
     if "tenant or user not found" in lowered:

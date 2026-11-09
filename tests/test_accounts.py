@@ -368,3 +368,22 @@ def test_store_errors_are_explained_without_secrets(error, hint):
     text = accounts.explain_store_error(error)
     assert hint in text
     assert "secret-password-123" not in text
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "postgresql://postgres.ab:pa#ss@aws-0.pooler.supabase.com:5432/postgres",
+        "postgresql://postgres.ab:pa?ss@aws-0.pooler.supabase.com:5432/postgres",
+        "postgresql://aws-0.pooler.supabase.com:5432/postgres",
+    ],
+)
+def test_cut_database_url_is_explained(url):
+    with pytest.raises(ValueError) as error:
+        AccountStore(url)
+    assert "символ #" in accounts.explain_store_error(error.value)
+
+
+def test_good_pooler_url_is_accepted():
+    store = AccountStore("postgresql://postgres.ab:Kx7mQ2pL@aws-0-eu-central-1.pooler.supabase.com:5432/postgres")
+    assert store._pg.port == 5432
