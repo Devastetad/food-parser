@@ -62,6 +62,13 @@ SCHEMA = [
         data_hash TEXT NOT NULL,
         updated_at TEXT NOT NULL
     )""",
+    """CREATE TABLE IF NOT EXISTS email_codes (
+        user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        code_hash TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        attempts INTEGER NOT NULL DEFAULT 0,
+        sent_at TEXT NOT NULL
+    )""",
     """CREATE TABLE IF NOT EXISTS audit_log (
         id TEXT PRIMARY KEY,
         user_id TEXT,
@@ -97,7 +104,11 @@ SCHEMA = [
 ]
 
 
-TABLES = ["users", "user_data", "audit_log", "payments", "receipts"]
+TABLES = ["users", "user_data", "audit_log", "payments", "receipts", "email_codes"]
+
+CODE_LIFETIME = timedelta(minutes=15)
+CODE_ATTEMPTS = 5
+CODE_RESEND_PAUSE = timedelta(seconds=60)
 
 
 class AccountError(Exception):
@@ -110,6 +121,7 @@ class User:
     email: str
     plan: str
     plan_until: str | None
+    verified: bool = False
 
     @property
     def is_pro(self) -> bool:
@@ -144,6 +156,10 @@ def verify_password(password: str, stored: str) -> bool:
 
 # Проверка несуществующей почты занимает столько же времени: по задержке не понять, есть ли аккаунт
 _DUMMY_HASH = hash_password(secrets.token_hex(8))
+
+
+def _code_hash(user_id: str, code: str) -> str:
+    return hashlib.sha256(f"{user_id}:{code}".encode("utf-8")).hexdigest()
 
 
 def normalize_email(email: str) -> str:
@@ -208,6 +224,11 @@ class AccountStore:
     def init_schema(self) -> None:
         for statement in SCHEMA:
             self._run(statement)
+        try:  # колонка появилась после первых аккаунтов
+            self._run("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0")
+        except Exception as error:
+            if "duplicate" not in str(error).lower() and "already exists" not in str(error).lower():
+                raise
         if self._pg is not None:
             # Supabase открывает таблицы схемы public через свой API по публичному ключу.
             # Защита строк без правил закрывает этот доступ, приложение входит владельцем таблиц
@@ -221,10 +242,12 @@ class AccountStore:
         )
 
     def _user(self, row) -> User:
-        return User(row[0], row[1], row[2], row[3])
+        return User(row[0], row[1], row[2], row[3], bool(row[4]))
 
     def get_user(self, user_id: str) -> User | None:
-        row = self._run("SELECT id, email, plan, plan_until FROM users WHERE id = ?", (user_id,), "one")
+        row = self._run(
+            "SELECT id, email, plan, plan_until, email_verified FROM users WHERE id = ?", (user_id,), "one"
+        )
         return self._user(row) if row else None
 
     def register(self, email: str, password: str) -> User:
@@ -244,7 +267,7 @@ class AccountStore:
             raise
         self.audit(user_id, "register")
         log.info("Регистрация %s", mask_email(email))
-        return User(user_id, email, "free", None)
+        return User(user_id, email, "free", None, False)
 
     def authenticate(self, email: str, password: str) -> User:
         wrong = AccountError("Неверная почта или пароль")
@@ -280,6 +303,44 @@ class AccountStore:
         )
         self.audit(user_id, "login")
         log.info("Вход %s", mask_email(email))
+        return self.get_user(user_id)
+
+    # --- Подтверждение почты ---
+
+    def issue_code(self, user_id: str) -> str:
+        """Новый код из 6 цифр. Хранится только хеш, повторно отправить можно через минуту."""
+        row = self._run("SELECT sent_at FROM email_codes WHERE user_id = ?", (user_id,), "one")
+        now = datetime.now(timezone.utc)
+        if row and datetime.fromisoformat(row[0]) + CODE_RESEND_PAUSE > now:
+            raise AccountError("Код уже отправлен. Новый можно запросить через минуту")
+        code = f"{secrets.randbelow(10**6):06d}"
+        self._run(
+            "INSERT INTO email_codes (user_id, code_hash, expires_at, attempts, sent_at) VALUES (?, ?, ?, 0, ?) "
+            "ON CONFLICT (user_id) DO UPDATE SET code_hash = excluded.code_hash, "
+            "expires_at = excluded.expires_at, attempts = 0, sent_at = excluded.sent_at",
+            (user_id, _code_hash(user_id, code), (now + CODE_LIFETIME).isoformat(timespec="seconds"),
+             now.isoformat(timespec="seconds")),
+        )  # fmt: skip
+        self.audit(user_id, "code_sent")
+        return code
+
+    def confirm_email(self, user_id: str, code: str) -> User:
+        row = self._run(
+            "SELECT code_hash, expires_at, attempts FROM email_codes WHERE user_id = ?", (user_id,), "one"
+        )
+        if row is None or row[1] < _now():
+            raise AccountError("Код устарел. Запросите новый")
+        code_hash, _, attempts = row
+        if attempts >= CODE_ATTEMPTS:
+            raise AccountError("Слишком много неверных попыток. Запросите новый код")
+        if not hmac.compare_digest(code_hash, _code_hash(user_id, code.strip())):
+            self._run("UPDATE email_codes SET attempts = attempts + 1 WHERE user_id = ?", (user_id,))
+            self.audit(user_id, "code_failed")
+            raise AccountError("Неверный код. Проверьте письмо и введите 6 цифр")
+        self._run("UPDATE users SET email_verified = 1 WHERE id = ?", (user_id,))
+        self._run("DELETE FROM email_codes WHERE user_id = ?", (user_id,))
+        self.audit(user_id, "email_confirmed")
+        log.info("Почта подтверждена у пользователя %s", user_id)
         return self.get_user(user_id)
 
     def change_password(self, user_id: str, old: str, new: str) -> None:

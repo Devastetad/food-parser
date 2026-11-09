@@ -14,12 +14,15 @@ import config
 from core.accounts import AccountError, AccountStore, User
 from core.cloud_sync import CloudSync, SyncError, _hash, restore, snapshot
 from core.logging_setup import get_logger
+from core.mailer import Mailer, MailError, SmtpSettings, code_letter
 from database.database import connect, init_db
-from interface.components.shared import DB_PATH_KEY, read_secret
+from interface.components.shared import DB_PATH_KEY, flash, read_secret, show_flash
 
 log = get_logger("auth")
 USER_KEY = "account_user"
 SAVED_HASH_KEY = "account_saved_hash"
+PENDING_KEY = "account_waiting_for_code"
+SMTP_SECRETS = ("SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASSWORD", "SMTP_FROM")
 USER_ID_RE = re.compile(r"^[0-9a-f]{32}$")
 
 
@@ -38,6 +41,15 @@ def store() -> AccountStore:
     return get_store(read_secret("DATABASE_URL"))
 
 
+def mailer() -> Mailer | None:
+    """Без настроек почты коды не отправляются и подтверждение выключено."""
+    values = [read_secret(name) for name in SMTP_SECRETS]
+    if not all(values):
+        return None
+    host, port, user, password, sender = values
+    return Mailer(SmtpSettings(host, int(port), user, password, sender))
+
+
 def current_user() -> User | None:
     return st.session_state.get(USER_KEY)
 
@@ -50,6 +62,8 @@ def _user_db_path(user_id: str):
 
 def _import_old_data(conn: sqlite3.Connection, user: User) -> bool:
     """Владелец сайта при первом входе получает записи, сохранённые раньше на GitHub."""
+    if not user.verified:  # почта без подтверждения могла быть чужой
+        return False
     owner = (read_secret("OWNER_EMAIL") or "").strip().lower()
     token, repository = read_secret("GITHUB_TOKEN"), read_secret("DATA_REPO")
     if not (owner and owner == user.email and token and repository):
@@ -104,11 +118,61 @@ def sign_out() -> None:
     user = current_user()
     if user is not None:
         store().audit(user.id, "logout")
-    for key in (USER_KEY, DB_PATH_KEY, SAVED_HASH_KEY):
+    for key in (USER_KEY, DB_PATH_KEY, SAVED_HASH_KEY, PENDING_KEY):
         st.session_state.pop(key, None)
 
 
+def send_code(user: User) -> None:
+    subject, text = code_letter(store().issue_code(user.id))
+    mailer().send(user.email, subject, text)
+
+
+def continue_with(user: User) -> None:
+    """После верного пароля: сразу внутрь или сначала код из письма."""
+    if user.verified or mailer() is None:
+        sign_in(user)
+    else:
+        st.session_state[PENDING_KEY] = user
+        try:
+            send_code(user)
+        except (AccountError, MailError) as error:
+            flash(str(error))
+    st.rerun()
+
+
+def code_page(user: User) -> None:
+    st.title("Подтвердите почту")
+    st.write(f"Мы отправили код из 6 цифр на **{user.email}**. Письмо может попасть в спам.")
+    with st.form("confirm_code"):
+        code = st.text_input("Код из письма", max_chars=6, autocomplete="one-time-code")
+        if st.form_submit_button("Подтвердить", type="primary"):
+            try:
+                verified = store().confirm_email(user.id, code)
+            except AccountError as error:
+                st.error(str(error))
+            else:
+                st.session_state.pop(PENDING_KEY, None)
+                sign_in(verified)
+                st.rerun()
+    left, right = st.columns(2)
+    if left.button("Отправить код ещё раз"):
+        try:
+            send_code(user)
+        except (AccountError, MailError) as error:
+            st.error(str(error))
+        else:
+            st.success("Новый код отправлен")
+    if right.button("Войти с другой почтой"):
+        st.session_state.pop(PENDING_KEY, None)
+        st.rerun()
+
+
 def login_page() -> None:
+    show_flash()
+    pending = st.session_state.get(PENDING_KEY)
+    if pending is not None:
+        code_page(pending)
+        return
     st.title("Personal Food Parser")
     st.write("Рецепты и план питания из продуктов, которые есть дома. Войдите, чтобы продолжить.")
     sign_in_tab, sign_up_tab = st.tabs(["Вход", "Регистрация"])
@@ -117,11 +181,11 @@ def login_page() -> None:
         password = st.text_input("Пароль", type="password", autocomplete="current-password")
         if st.form_submit_button("Войти", type="primary"):
             try:
-                sign_in(store().authenticate(email, password))
+                user = store().authenticate(email, password)
             except AccountError as error:
                 st.error(str(error))
             else:
-                st.rerun()
+                continue_with(user)
     with sign_up_tab, st.form("sign_up"):
         email = st.text_input("Почта", key="new_email", autocomplete="email")
         password = st.text_input(
@@ -134,8 +198,8 @@ def login_page() -> None:
                 st.error("Пароли не совпадают")
             else:
                 try:
-                    sign_in(store().register(email, password))
+                    user = store().register(email, password)
                 except AccountError as error:
                     st.error(str(error))
                 else:
-                    st.rerun()
+                    continue_with(user)

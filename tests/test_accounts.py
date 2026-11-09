@@ -250,3 +250,75 @@ def test_postgres_uses_its_placeholders_and_closes_public_api(monkeypatch):
 def test_unknown_database_url_is_rejected():
     with pytest.raises(ValueError):
         AccountStore("mysql://localhost/db")
+
+
+def test_email_code_confirms_account(store):
+    user = store.register("a@b.ru", PASSWORD)
+    assert not user.verified
+    code = store.issue_code(user.id)
+    assert len(code) == 6 and code.isdigit()
+    with pytest.raises(AccountError, match="через минуту"):
+        store.issue_code(user.id)  # повторно сразу нельзя
+    wrong = "000000" if code != "000000" else "111111"
+    with pytest.raises(AccountError, match="Неверный код"):
+        store.confirm_email(user.id, wrong)
+    assert store.confirm_email(user.id, f" {code} ").verified
+    assert store.authenticate("a@b.ru", PASSWORD).verified
+    with pytest.raises(AccountError, match="устарел"):
+        store.confirm_email(user.id, code)  # код одноразовый
+
+
+def test_code_stops_after_too_many_attempts(store, tmp_path):
+    user = store.register("a@b.ru", PASSWORD)
+    code = store.issue_code(user.id)
+    wrong = "000000" if code != "000000" else "111111"
+    for _ in range(accounts.CODE_ATTEMPTS):
+        with pytest.raises(AccountError):
+            store.confirm_email(user.id, wrong)
+    with pytest.raises(AccountError, match="Слишком много"):
+        store.confirm_email(user.id, code)
+    with closing(sqlite3.connect(tmp_path / "accounts.db")) as conn:
+        stored = conn.execute("SELECT code_hash FROM email_codes").fetchone()[0]
+    assert code not in stored
+
+
+def test_expired_code_is_rejected(store, tmp_path):
+    user = store.register("a@b.ru", PASSWORD)
+    code = store.issue_code(user.id)
+    with closing(sqlite3.connect(tmp_path / "accounts.db")) as conn:
+        conn.execute("UPDATE email_codes SET expires_at = '2000-01-01T00:00:00+00:00'")
+        conn.commit()
+    with pytest.raises(AccountError, match="устарел"):
+        store.confirm_email(user.id, code)
+
+
+def test_schema_upgrade_adds_verified_column(tmp_path):
+    path = tmp_path / "old.db"
+    with closing(sqlite3.connect(path)) as conn:
+        conn.execute(accounts.SCHEMA[0])  # таблица users без новой колонки
+        conn.commit()
+    store = AccountStore(f"sqlite:///{path}")
+    store.init_schema()
+    store.init_schema()  # второй запуск не падает
+    assert not store.register("a@b.ru", PASSWORD).verified
+
+
+def test_sign_up_waits_for_email_code(accounts_app, monkeypatch):
+    from core import mailer
+
+    letters = []
+    monkeypatch.setattr(mailer.Mailer, "send", lambda self, to, subject, text: letters.append((to, text)))
+    for name, value in [("SMTP_HOST", "smtp.example.com"), ("SMTP_PORT", "465"), ("SMTP_USER", "bot"),
+                        ("SMTP_PASSWORD", "secret"), ("SMTP_FROM", "bot@example.com")]:
+        accounts_app.secrets[name] = value
+    app = accounts_app.run()
+    sign_up(app, "new@b.ru")
+    assert app.title[0].value == "Подтвердите почту"
+    assert "user_db_path" not in app.session_state  # до кода данных пользователя нет
+    to, text = letters[-1]
+    code = next(word for word in text.split() if word.isdigit() and len(word) == 6)
+    assert to == "new@b.ru"
+    app.text_input[0].input(code)
+    app.button[0].click().run()
+    assert not app.exception
+    assert app.title[0].value == "Главная"
