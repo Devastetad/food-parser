@@ -387,3 +387,20 @@ def test_cut_database_url_is_explained(url):
 def test_good_pooler_url_is_accepted():
     store = AccountStore("postgresql://postgres.ab:Kx7mQ2pL@aws-0-eu-central-1.pooler.supabase.com:5432/postgres")
     assert store._pg.port == 5432
+
+
+def test_paste_artifacts_are_tolerated():
+    store = AccountStore(' "postgresql+psycopg2://postgres.ab:Kx7mQ2pL@aws-0.pooler.supabase.com:5432/postgres" ')
+    assert store._pg.hostname == "aws-0.pooler.supabase.com"
+
+
+@pytest.mark.parametrize(
+    "value, shown",
+    [("https://abc.supabase.co", "«https://»"), ("MySecretPassword", "нет «://»"), ("", "пустое")],
+)
+def test_wrong_value_hint_shows_only_prefix(value, shown):
+    with pytest.raises(ValueError) as error:
+        AccountStore(value)
+    text = accounts.explain_store_error(error.value)
+    assert shown in text
+    assert "MySecret" not in text and "abc.supabase" not in text

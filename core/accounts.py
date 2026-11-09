@@ -186,12 +186,14 @@ class AccountStore:
     """Хранилище аккаунтов. url: postgresql://... или sqlite:///путь."""
 
     def __init__(self, url: str):
+        url = url.strip().strip("\"'<>").strip()  # частые следы копирования
         parsed = urlparse(url)
+        scheme = parsed.scheme.split("+")[0]  # postgresql+psycopg2:// из вкладки ORM
         if parsed.scheme == "sqlite":
             self._path = url.removeprefix("sqlite:///")
             self._mark = "?"
             self._pg = None
-        elif parsed.scheme in ("postgres", "postgresql"):
+        elif scheme in ("postgres", "postgresql"):
             try:
                 parsed.port
             except ValueError:
@@ -201,7 +203,9 @@ class AccountStore:
             self._pg = parsed
             self._mark = "%s"
         else:
-            raise ValueError(WRONG_SCHEME)
+            # Показывается всем посетителям, поэтому только приставка адреса, без начала значения
+            found = f"начинается с «{parsed.scheme[:12]}://»" if "://" in url else "это не адрес: нет «://»"
+            raise ValueError(f"{WRONG_SCHEME}. Сейчас {'значение пустое' if not url else found}")
 
     def _connect(self):
         if self._pg is None:
@@ -445,8 +449,9 @@ def explain_store_error(error: Exception) -> str:
     if isinstance(error, ValueError):
         return (
             "DATABASE_URL должен начинаться с postgresql:// (строка Session pooler из Supabase). "
-            "Проверьте, что значение в кавычках и перед ним нет лишних символов"
-        )
+            "Проверьте, что значение в кавычках и перед ним нет лишних символов. "
+            + text.removeprefix(WRONG_SCHEME).removeprefix(". ")
+        ).strip()
     if "28p01" in lowered or "password authentication failed" in lowered:
         return "Supabase не принял пароль базы. Вставьте в строку пароль базы данных проекта или сбросьте его"
     if "tenant or user not found" in lowered:
