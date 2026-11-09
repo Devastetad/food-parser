@@ -404,3 +404,19 @@ def test_wrong_value_hint_shows_only_prefix(value, shown):
     text = accounts.explain_store_error(error.value)
     assert shown in text
     assert "MySecret" not in text and "abc.supabase" not in text
+
+
+def test_supabase_certificate_is_trusted_and_checks_stay_on():
+    import ssl
+
+    context = accounts._ssl_context()
+    assert context.verify_mode == ssl.CERT_REQUIRED and context.check_hostname
+    subjects = [dict(item[0] for item in cert["subject"]) for cert in context.get_ca_certs()]
+    assert any(subject.get("commonName") == "Supabase Root 2021 CA" for subject in subjects)
+
+
+def test_certificate_error_is_explained():
+    import ssl
+
+    error = ssl.SSLCertVerificationError("certificate verify failed: self-signed certificate in certificate chain")
+    assert "Сертификат" in accounts.explain_store_error(error)

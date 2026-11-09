@@ -16,6 +16,7 @@ import uuid
 from contextlib import closing
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 from core.logging_setup import get_logger, mask_email
@@ -111,6 +112,8 @@ CODE_ATTEMPTS = 5
 CODE_RESEND_PAUSE = timedelta(seconds=60)
 
 
+# Supabase Root 2021 CA, действует до 2031 года. Взят с сайта Supabase и сверен с их сервером
+SUPABASE_CA = Path(__file__).resolve().parent.parent / "certs" / "supabase-root-2021.crt"
 WRONG_SCHEME = "DATABASE_URL должен начинаться с postgresql:// или sqlite:///"
 BROKEN_URL = "DATABASE_URL обрезан"
 
@@ -182,6 +185,16 @@ def check_password_rules(password: str, email: str) -> None:
         raise AccountError("Пароль не должен совпадать с адресом почты")
 
 
+def _ssl_context() -> ssl.SSLContext:
+    """Системные корневые сертификаты плюс корневой Supabase: им подписан их сервер базы.
+
+    Проверка сертификата и имени сервера не отключается, иначе соединение можно подменить.
+    """
+    context = ssl.create_default_context()
+    context.load_verify_locations(SUPABASE_CA)
+    return context
+
+
 class AccountStore:
     """Хранилище аккаунтов. url: postgresql://... или sqlite:///путь."""
 
@@ -218,7 +231,7 @@ class AccountStore:
         return pg8000.dbapi.connect(
             user=unquote(url.username or ""), password=unquote(url.password or ""),
             host=url.hostname, port=url.port or 5432, database=(url.path or "/postgres")[1:],
-            ssl_context=ssl.create_default_context(), timeout=20,
+            ssl_context=_ssl_context(), timeout=20,
         )  # fmt: skip
 
     def _run(self, sql: str, params=(), fetch: str | None = None):
@@ -436,6 +449,8 @@ def explain_store_error(error: Exception) -> str:
     """Понятная причина, почему хранилище не открылось. Секреты в текст не попадают."""
     text = str(error)
     lowered = text.lower()
+    if "certificate" in lowered:  # ошибка сертификата тоже ValueError, поэтому проверяется первой
+        return "Сертификат сервера базы не прошёл проверку. Нужна строка Session pooler из Supabase"
     if isinstance(error, ValueError) and "ipv6" in lowered:
         return (
             "Строка DATABASE_URL не разбирается. Проверьте, что [YOUR-PASSWORD] заменён паролем "
