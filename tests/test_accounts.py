@@ -322,3 +322,31 @@ def test_sign_up_waits_for_email_code(accounts_app, monkeypatch):
     app.button[0].click().run()
     assert not app.exception
     assert app.title[0].value == "Главная"
+
+
+def test_owner_gets_old_data_only_with_confirmed_email_when_mail_is_on(monkeypatch):
+    from interface.components import auth
+
+    calls = []
+
+    class FakeSync:
+        def __init__(self, token, repository):
+            pass
+
+        def load(self, conn):
+            calls.append(conn)
+            return True
+
+    secrets = {"OWNER_EMAIL": "Owner@b.ru", "GITHUB_TOKEN": "t", "DATA_REPO": "r"}
+    monkeypatch.setattr(auth, "read_secret", secrets.get)
+    monkeypatch.setattr(auth, "CloudSync", FakeSync)
+    owner = accounts.User("a" * 32, "owner@b.ru", "free", None, verified=False)
+    stranger = accounts.User("b" * 32, "other@b.ru", "free", None, verified=True)
+
+    monkeypatch.setattr(auth, "mailer", lambda: None)  # без почты подтверждать нечем
+    assert auth._import_old_data(None, owner)
+    assert not auth._import_old_data(None, stranger)
+
+    monkeypatch.setattr(auth, "mailer", lambda: object())
+    assert not auth._import_old_data(None, owner)
+    assert auth._import_old_data(None, accounts.User(owner.id, owner.email, "free", None, verified=True))

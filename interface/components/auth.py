@@ -62,7 +62,7 @@ def _user_db_path(user_id: str):
 
 def _import_old_data(conn: sqlite3.Connection, user: User) -> bool:
     """Владелец сайта при первом входе получает записи, сохранённые раньше на GitHub."""
-    if not user.verified:  # почта без подтверждения могла быть чужой
+    if mailer() is not None and not user.verified:  # почта без подтверждения могла быть чужой
         return False
     owner = (read_secret("OWNER_EMAIL") or "").strip().lower()
     token, repository = read_secret("GITHUB_TOKEN"), read_secret("DATA_REPO")
