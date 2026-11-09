@@ -420,3 +420,72 @@ def test_certificate_error_is_explained():
 
     error = ssl.SSLCertVerificationError("certificate verify failed: self-signed certificate in certificate chain")
     assert "Сертификат" in accounts.explain_store_error(error)
+
+
+class InterfaceError(Exception):
+    """Как в pg8000: связь с сервером потеряна."""
+
+
+class FlakyConnection(FakeConnection):
+    def __init__(self, log, fail_first=None):
+        super().__init__(log)
+        self.fail_first = fail_first
+        self.rolled_back = 0
+        self.closed = False
+
+    def cursor(self):
+        connection = self
+
+        class Cursor(FakeCursor):
+            def execute(self, sql, params=()):
+                if connection.fail_first:
+                    error, connection.fail_first = connection.fail_first, None
+                    raise error
+                super().execute(sql, params)
+
+        return Cursor(self.log)
+
+    def rollback(self):
+        self.rolled_back += 1
+
+    def close(self):
+        self.closed = True
+
+
+def postgres_store(monkeypatch, connections):
+    store = AccountStore("postgresql://user:pass@db.example.com:5432/postgres")
+    opened = []
+
+    def connect():
+        connection = connections.pop(0)
+        opened.append(connection)
+        return connection
+
+    monkeypatch.setattr(store, "_connect", connect)
+    return store, opened
+
+
+def test_postgres_connection_is_reused(monkeypatch):
+    log = []
+    store, opened = postgres_store(monkeypatch, [FakeConnection(log)])
+    for _ in range(5):
+        store.get_user("abc")
+    assert len(opened) == 1 and len(log) == 5
+
+
+def test_lost_connection_is_reopened_once(monkeypatch):
+    log = []
+    broken = FlakyConnection(log, fail_first=InterfaceError("network error"))
+    store, opened = postgres_store(monkeypatch, [broken, FakeConnection(log)])
+    store.get_user("abc")
+    assert len(opened) == 2 and broken.closed and len(log) == 1
+
+
+def test_query_error_keeps_connection_and_rolls_back(monkeypatch):
+    log = []
+    connection = FlakyConnection(log, fail_first=RuntimeError("syntax error"))
+    store, opened = postgres_store(monkeypatch, [connection])
+    with pytest.raises(RuntimeError):
+        store.get_user("abc")
+    store.get_user("abc")
+    assert len(opened) == 1 and connection.rolled_back == 1

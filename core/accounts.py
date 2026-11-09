@@ -12,6 +12,7 @@ import re
 import secrets
 import sqlite3
 import ssl
+import threading
 import uuid
 from contextlib import closing
 from dataclasses import dataclass
@@ -195,6 +196,24 @@ def _ssl_context() -> ssl.SSLContext:
     return context
 
 
+def _execute(conn, sql: str, params, fetch: str | None):
+    cursor = conn.cursor()
+    try:
+        cursor.execute(sql, params)
+        result = cursor.fetchone() if fetch == "one" else cursor.fetchall() if fetch == "all" else None
+        conn.commit()
+    except Exception as error:
+        if not _connection_lost(error):
+            conn.rollback()
+        raise
+    return result
+
+
+def _connection_lost(error: Exception) -> bool:
+    """Обрыв связи (сервер закрыл простаивающее соединение), а не ошибка в запросе."""
+    return isinstance(error, (OSError, EOFError)) or type(error).__name__ == "InterfaceError"
+
+
 class AccountStore:
     """Хранилище аккаунтов. url: postgresql://... или sqlite:///путь."""
 
@@ -215,6 +234,8 @@ class AccountStore:
                 raise ValueError(BROKEN_URL)
             self._pg = parsed
             self._mark = "%s"
+            self._lock = threading.Lock()
+            self._conn = None
         else:
             # Показывается всем посетителям, поэтому только приставка адреса, без начала значения
             found = f"начинается с «{parsed.scheme[:12]}://»" if "://" in url else "это не адрес: нет «://»"
@@ -237,16 +258,28 @@ class AccountStore:
     def _run(self, sql: str, params=(), fetch: str | None = None):
         """Одна операция в своей транзакции. sql пишется с ?, для Postgres меняется на %s."""
         sql = sql.replace("?", self._mark)
-        with closing(self._connect()) as conn:
-            cursor = conn.cursor()
-            try:
-                cursor.execute(sql, params)
-                result = cursor.fetchone() if fetch == "one" else cursor.fetchall() if fetch == "all" else None
-                conn.commit()
-            except Exception:
-                conn.rollback()
-                raise
-            return result
+        if self._pg is None:
+            with closing(self._connect()) as conn:
+                return _execute(conn, sql, params, fetch)
+        # Новое защищённое соединение с Supabase стоит больше секунды, поэтому оно одно на сервер
+        with self._lock:
+            for attempt in range(2):
+                if self._conn is None:
+                    self._conn = self._connect()
+                try:
+                    return _execute(self._conn, sql, params, fetch)
+                except Exception as error:
+                    if attempt or not _connection_lost(error):
+                        raise
+                    log.info("Соединение с хранилищем оборвалось, подключаюсь заново")
+                    self._drop_connection()
+
+    def _drop_connection(self) -> None:
+        try:
+            self._conn.close()
+        except Exception:
+            pass
+        self._conn = None
 
     def init_schema(self) -> None:
         for statement in SCHEMA:
