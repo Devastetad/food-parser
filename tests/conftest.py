@@ -1,4 +1,7 @@
-import pandas  # noqa: F401  первая загрузка из потока AppTest изредка падает на полпути
+try:  # первая загрузка из потока AppTest изредка падает на полпути, поэтому заранее
+    import pandas  # noqa: F401
+except ImportError:  # без pandas упадут только тесты страниц с таблицами
+    pass
 from contextlib import closing
 
 import pytest

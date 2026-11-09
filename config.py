@@ -10,6 +10,8 @@ SEED_DB = BASE_DIR / "seed.db"  # начальная база с рецепта�
 JOURNAL_MODE = os.environ.get("FOOD_PARSER_JOURNAL", "WAL")  # WAL недоступен в браузере
 DB_PATH = DATA_DIR / "food_parser.db"
 BACKUP_DIR = DATA_DIR / "backups"
+LOG_DIR = DATA_DIR / "logs"
+USERS_DIR = DATA_DIR / "users"  # базы пользователей на сервере, источник данных — хранилище аккаунтов
 
 BACKUP_KEEP = int(os.environ.get("FOOD_PARSER_BACKUP_KEEP", 20))  # сколько копий хранить
 BACKUP_MAX_AGE = timedelta(days=1)  # как часто делать автоматическую копию

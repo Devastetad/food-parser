@@ -22,7 +22,8 @@ from database.database import (
     schema_version,
     table_counts,
 )
-from interface.components.shared import SYNC_KEY, flash, open_db, plural, show_flash
+from interface.components.auth import accounts_enabled
+from interface.components.shared import SYNC_KEY, current_db_path, flash, open_db, plural, show_flash
 
 show_flash()
 st.title("Настройки")
@@ -107,14 +108,14 @@ def preferences_section() -> None:
 
 def backup_section() -> None:
     st.subheader("Резервные копии")
-    backups = list_backups(config.DB_PATH, config.BACKUP_DIR)
+    backups = list_backups(current_db_path(), config.BACKUP_DIR)
     st.caption(
         f"Копии создаются раз в сутки и перед обновлением базы, хранятся последние "
         f"{config.BACKUP_KEEP}. Сейчас их {len(backups)}."
     )
     if st.button("Создать копию сейчас"):
         try:
-            path = create_backup(config.DB_PATH, config.BACKUP_DIR)
+            path = create_backup(current_db_path(), config.BACKUP_DIR)
         except (BackupError, sqlite3.Error, OSError) as error:
             st.error(f"Копия не создана: {error}")
         else:
@@ -130,7 +131,7 @@ def backup_section() -> None:
         st.caption("Текущее состояние будет сохранено отдельной копией.")
         if st.button("Восстановить", disabled=not confirmed):
             try:
-                restore_backup(choice, config.DB_PATH, config.BACKUP_DIR)
+                restore_backup(choice, current_db_path(), config.BACKUP_DIR)
             except (BackupError, SchemaTooNewError, sqlite3.Error, OSError) as error:
                 st.error(f"Не удалось восстановить: {error}")
             else:
@@ -143,7 +144,7 @@ def file_section() -> None:
     with st.expander("Перенести данные файлом"):
         st.caption("Сохраните файл, чтобы не потерять данные или перенести их на другое устройство.")
         if st.button("Подготовить файл базы"):
-            st.session_state["database_file"] = export_database(config.DB_PATH)
+            st.session_state["database_file"] = export_database(current_db_path())
         if "database_file" in st.session_state:
             st.download_button(
                 "Скачать файл базы",
@@ -158,7 +159,7 @@ def file_section() -> None:
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(uploaded.getvalue())
             try:
-                restore_backup(target, config.DB_PATH, config.BACKUP_DIR)
+                restore_backup(target, current_db_path(), config.BACKUP_DIR)
             except (BackupError, SchemaTooNewError, sqlite3.Error, OSError) as error:
                 st.error(f"Не удалось загрузить: {error}")
             else:
@@ -169,17 +170,20 @@ def file_section() -> None:
 
 
 def database_section() -> None:
+    if accounts_enabled():
+        st.caption("Данные автоматически сохраняются в вашем аккаунте.")
+        return
     if st.session_state.get(SYNC_KEY):
         st.caption("Данные автоматически сохраняются на GitHub.")
     else:
         st.caption("Автосохранение на GitHub выключено: данные хранятся только в этой базе.")
     with st.expander("Состояние базы"):
-        st.write(f"Файл: `{config.DB_PATH}`")
-        st.write(f"Версия схемы: {schema_version(config.DB_PATH)}")
+        st.write(f"Файл: `{current_db_path()}`")
+        st.write(f"Версия схемы: {schema_version(current_db_path())}")
         st.dataframe(
             [
                 {"Таблица": name, "Записей": count}
-                for name, count in table_counts(config.DB_PATH).items()
+                for name, count in table_counts(current_db_path()).items()
             ],
             hide_index=True,
         )
@@ -187,5 +191,6 @@ def database_section() -> None:
 
 equipment_section()
 preferences_section()
-backup_section()
+if not accounts_enabled():  # копии и файлы базы общие для сервера, с аккаунтами их показывать нельзя
+    backup_section()
 database_section()

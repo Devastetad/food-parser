@@ -11,6 +11,7 @@ from database.database import connect
 
 FLASH_KEY = "flash_message"
 SYNC_KEY = "cloud_sync_enabled"
+DB_PATH_KEY = "user_db_path"
 PHONE_RE = re.compile(r"iPhone|iPod|Android.*Mobile", re.I)
 
 
@@ -26,9 +27,14 @@ def is_phone() -> bool:
     return bool(PHONE_RE.search(st.context.headers.get("User-Agent", "")))
 
 
+def current_db_path():
+    """База вошедшего пользователя, а без аккаунтов — общая база приложения."""
+    return st.session_state.get(DB_PATH_KEY) or config.DB_PATH
+
+
 def open_db():
     """Соединение на время блока. Путь читается при вызове, а не при импорте."""
-    return closing(connect(config.DB_PATH))
+    return closing(connect(current_db_path()))
 
 
 def flash(message: str) -> None:
